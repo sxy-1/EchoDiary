@@ -1,10 +1,9 @@
 import json
 import os
 
-CONFIG_FILE = 'config.json'
+CONFIG_FILE = './data/config/config.json'
 DEFAULT_CONFIG = {
-    "interval": 62,
-    "encoding": "utf-8"
+    "key_path": "./data/keys/"
 }
 
 def load_config(file_path):
