@@ -1,0 +1,20 @@
+[project]
+name = "echodiary"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "sxy", email = "2712570987@qq.com"}
+]
+license = {text = "GPL-3.0"}
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.14"
+pyside6 = "^6.8.2.1"
+pyside6-fluent-widgets = {extras = ["full"], version = "^1.7.5"}
+cryptography = "^44.0.2"
+markdown = "^3.7"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
