@@ -11,10 +11,10 @@ import markdown
 from qfluentwidgets import setTheme, Theme, FluentTranslator, PushButton, PrimaryPushButton, TextEdit, CommandBar, \
     Action, TransparentDropDownPushButton, setFont
 import utils.config
-from utils import crypter
+from managers import crypto_manager
 from utils.html2img import html_to_image
 from qfluentwidgets import FluentIcon as FIF
-from utils.crypter import decrypt_data
+from managers import CryptoManager
 
 
 class EditorInterface(QWidget):
@@ -30,6 +30,7 @@ class EditorInterface(QWidget):
         self.timer.start(300)  # Update preview every 300 milliseconds
 
         # 自动加载当日日记
+        self.crypto_manager = CryptoManager()
         self.load_file()
 
 
@@ -116,7 +117,7 @@ class EditorInterface(QWidget):
             "content": self.text_edit.toPlainText()
         }
         # 加密数据
-        ciphertext = crypter.encrypt_data(pickle.dumps(data))
+        ciphertext = self.crypto_manager.encrypt_data(pickle.dumps(data))
 
         file_path = os.path.join("./data/diary_data", str(datetime.now().strftime("%Y-%m-%d"))+".enc")
         # 如果文件路径不为空,则保存文件
@@ -137,7 +138,7 @@ class EditorInterface(QWidget):
             try:
                 with open(file_path, "rb") as f:
                     ciphertext = f.read()
-                    data = pickle.loads(crypter.decrypt_data(ciphertext))
+                    data = pickle.loads(self.crypto_manager.decrypt_data(ciphertext))
                     self.text_edit.setPlainText(data['content'])
             except Exception as e:
                 print(f"Error loading file: {e}")

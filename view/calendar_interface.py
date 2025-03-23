@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QCalendarWidget, QWidge
 from PySide6.QtGui import QPainter, QColor, QBrush
 from PySide6.QtCore import QDate, Signal
 
-from utils import crypter
+from managers import crypto_manager
 
 StyleSheet = """
 /*顶部导航区域*/
