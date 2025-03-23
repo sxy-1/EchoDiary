@@ -2,11 +2,10 @@
 
 # special
 *.doc
-/frames_long/
-/frames_long_del_60_90s/
-/frames_short/
 /res/
-data/
+data/*
+
+temp.md
 
 
 
@@ -17,9 +16,7 @@ data/
 /dist/
 /build/
 /log/
-/conda_requirements.txt
-/generate_tree.py
-/pip_requirements.txt
+
 
 
 
@@ -48,10 +45,6 @@ build/
 dist/
 dist - 副本/
 log/
-account.db
-config.json
-generate_tree.py
-net_speed.py
 
 # macOS
 .DS_Store
@@ -72,5 +65,3 @@ build/
 # Virtualenv
 venv/
 *.venv/
-
-
