@@ -3,12 +3,11 @@
 # special
 *.doc
 /res/
-data/*
 
 temp.md
 
-
-
+*.pem
+*.enc
 /log.txt
 /db/
 /backup/
