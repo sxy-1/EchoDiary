@@ -1,8 +1,11 @@
 import os
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
-from cryptography.hazmat.primitives.serialization import load_pem_public_key, load_pem_private_key
-from utils import config
+from cryptography.hazmat.primitives.serialization import (
+    load_pem_public_key,
+    load_pem_private_key,
+)
+from managers.config_manager import ConfigManager
 
 
 class CryptoManager:
@@ -16,7 +19,10 @@ class CryptoManager:
         """
         初始化 RSAEncryptor 类，确保密钥存储路径存在。
         """
+        config = ConfigManager()
         self.key_path = config.get_config_value("key_path")
+        if not self.key_path:
+            raise ValueError("Key path is not set in config file.")
         os.makedirs(self.key_path, exist_ok=True)
 
     def _get_key_paths(self):
@@ -42,26 +48,27 @@ class CryptoManager:
             return
 
         # 生成密钥对
-        private_key = rsa.generate_private_key(
-            public_exponent=65537,
-            key_size=2048
-        )
+        private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
         public_key = private_key.public_key()
 
         # 保存公钥
         with open(public_key_path, "wb") as f:
-            f.write(public_key.public_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PublicFormat.SubjectPublicKeyInfo
-            ))
+            f.write(
+                public_key.public_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PublicFormat.SubjectPublicKeyInfo,
+                )
+            )
 
         # 保存私钥
         with open(private_key_path, "wb") as f:
-            f.write(private_key.private_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PrivateFormat.TraditionalOpenSSL,
-                encryption_algorithm=serialization.NoEncryption()
-            ))
+            f.write(
+                private_key.private_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PrivateFormat.TraditionalOpenSSL,
+                    encryption_algorithm=serialization.NoEncryption(),
+                )
+            )
 
     def load_rsa_keys(self):
         """
@@ -99,8 +106,8 @@ class CryptoManager:
             padding.OAEP(
                 mgf=padding.MGF1(algorithm=hashes.SHA256()),
                 algorithm=hashes.SHA256(),
-                label=None
-            )
+                label=None,
+            ),
         )
         return ciphertext
 
@@ -120,7 +127,7 @@ class CryptoManager:
             padding.OAEP(
                 mgf=padding.MGF1(algorithm=hashes.SHA256()),
                 algorithm=hashes.SHA256(),
-                label=None
-            )
+                label=None,
+            ),
         )
         return plaintext

@@ -1,3 +1,4 @@
 {
-    "key_path": "./data/keys/"
+    "key_path": "./data/keys/",
+    "password": "123456"
 }
