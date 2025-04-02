@@ -34,7 +34,7 @@ class SplashScreen(QDialog):
 
         # 设置背景图片
         self.label = QLabel()
-        pixmap = QPixmap("./resource/images/logo.png")
+        pixmap = QPixmap(":/images/logo.png")
         self.label.setPixmap(pixmap)
 
         # 密码输入框

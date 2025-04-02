@@ -64,3 +64,9 @@ build/
 # Virtualenv
 venv/
 *.venv/
+
+# IDE
+.vscode/
+.vs/
+*.sublime-project
+*.sublime-workspace

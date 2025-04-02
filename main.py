@@ -5,11 +5,9 @@ from qfluentwidgets import setTheme, Theme
 
 from view.splash_screen import SplashScreen
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     setTheme(Theme.DARK)
     app = QApplication(sys.argv)
-
-
 
     splash = SplashScreen()
     splash.show()
