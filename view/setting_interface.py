@@ -16,7 +16,8 @@ from qfluentwidgets import (
     RangeSettingCard,
 )
 from qfluentwidgets import FluentIcon as FIF
-from qfluentwidgets import InfoBar
+from qfluentwidgets import InfoBar, SearchLineEdit
+from PySide6.QtWidgets import QCompleter
 from PySide6.QtCore import Qt, QUrl, QStandardPaths
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QWidget, QLabel, QFileDialog
@@ -24,6 +25,9 @@ from PySide6.QtWidgets import QWidget, QLabel, QFileDialog
 from common.config import cfg, HELP_URL, FEEDBACK_URL, AUTHOR, VERSION, YEAR, isWin11
 from common.signal_bus import signalBus
 from common.style_sheet import StyleSheet
+import sys
+from PySide6.QtWidgets import QApplication
+from qfluentwidgets import Theme
 
 
 class SettingInterface(ScrollArea):
@@ -36,6 +40,62 @@ class SettingInterface(ScrollArea):
 
         # setting label
         self.settingLabel = QLabel(self.tr("Settings"), self)
+
+        # region  天气
+
+        # line edit with completer
+        self.weatherCard = SearchLineEdit(self)
+        self.weatherCard.setPlaceholderText("Type a stand name")
+        self.weatherCard.setClearButtonEnabled(True)
+        self.weatherCard.setFixedWidth(230)
+        stands = [
+            "Star Platinum",
+            "Hierophant Green",
+            "Made in Haven",
+            "King Crimson",
+            "Silver Chariot",
+            "Crazy diamond",
+            "Metallica",
+            "Another One Bites The Dust",
+            "Heaven's Door",
+            "Killer Queen",
+            "The Grateful Dead",
+            "Stone Free",
+            "The World",
+            "Sticky Fingers",
+            "Ozone Baby",
+            "Love Love Deluxe",
+            "Hermit Purple",
+            "Gold Experience",
+            "King Nothing",
+            "Paper Moon King",
+            "Scary Monster",
+            "Mandom",
+            "20th Century Boy",
+            "Tusk Act 4",
+            "Ball Breaker",
+            "Sex Pistols",
+            "D4C • Love Train",
+            "Born This Way",
+            "SOFT & WET",
+            "Paisley Park",
+            "Wonder of U",
+            "Walking Heart",
+            "Cream Starter",
+            "November Rain",
+            "Smooth Operators",
+            "The Matte Kudasai",
+        ]
+        completer = QCompleter(stands, self.weatherCard)
+        completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        completer.setMaxVisibleItems(10)
+        self.weatherCard.setCompleter(completer)
+
+        # 创建天气设置组
+        self.weatherGroup = SettingCardGroup("Weather Settings", self.scrollWidget)
+
+        self.weatherGroup.addSettingCard(self.weatherCard)
+        # endregion
 
         # music folders
         self.musicInThisPCGroup = SettingCardGroup(
@@ -207,6 +267,7 @@ class SettingInterface(ScrollArea):
         self.expandLayout.setSpacing(28)
         self.expandLayout.setContentsMargins(36, 10, 36, 0)
         self.expandLayout.addWidget(self.musicInThisPCGroup)
+        self.expandLayout.addWidget(self.weatherGroup)
         self.expandLayout.addWidget(self.personalGroup)
         self.expandLayout.addWidget(self.materialGroup)
         self.expandLayout.addWidget(self.updateSoftwareGroup)
@@ -246,3 +307,11 @@ class SettingInterface(ScrollArea):
         self.feedbackCard.clicked.connect(
             lambda: QDesktopServices.openUrl(QUrl(FEEDBACK_URL))
         )
+
+
+if __name__ == "__main__":
+    setTheme(Theme.DARK)
+    app = QApplication(sys.argv)
+    window = SettingInterface()
+    window.show()
+    sys.exit(app.exec())

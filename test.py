@@ -1,116 +1,126 @@
-import os
-import pickle
+"""
+天气查询测试
+"""
+
 import sys
-from datetime import datetime
+import requests
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QApplication, QHBoxLayout, QTextBrowser
+from PySide6.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QApplication,
+    QHBoxLayout,
+    QLabel,
+    QComboBox,
+)
+from qfluentwidgets import FluentTranslator, PrimaryPushButton, TextEdit
 
-from PySide6.QtCore import QTimer
-import markdown
-from qfluentwidgets import setTheme, Theme, FluentTranslator, PushButton, PrimaryPushButton,TextEdit
-import utils.config
-from managers import CryptoManager
+# 城市代码字典
+CITY_CODES = {
+    "北京": "101010100",
+    "上海": "101020100",
+    "广州": "101280101",
+    "深圳": "101280601",
+    "天津": "101030100",
+    "重庆": "101040100",
+    "杭州": "101210101",
+    "南京": "101190101",
+    "武汉": "101200101",
+    "成都": "101270101",
+}
 
 
-class EditorInterface(QWidget):
+class WeatherWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setObjectName("EditorInterface")
+        self.setObjectName("WeatherWidget")
         self.initUI()
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_preview)
-        self.timer.start(300)  # Update preview every 300 milliseconds
-
-        self.crypto_manager = CryptoManager()
-        # 自动加载当日日记
-        self.load_file()
 
     def initUI(self):
         main_layout = QVBoxLayout()
 
-        # Top layout for buttons
-        top_layout = QHBoxLayout()
-        save_button = PrimaryPushButton(text = "Save")
-        save_button.clicked.connect(self.save_file)
+        # 城市选择区域
+        city_layout = QHBoxLayout()
+        city_label = QLabel("选择城市:")
+        self.city_combo = QComboBox()
+        for city in CITY_CODES.keys():
+            self.city_combo.addItem(city)
 
-        date_button = PrimaryPushButton(text = datetime.now().strftime("%Y-%m-%d"))
-        top_layout.addWidget(save_button)
-        top_layout.addWidget(date_button)
+        city_layout.addWidget(city_label)
+        city_layout.addWidget(self.city_combo)
+        city_layout.addStretch()
 
-        # Layout for text editor and preview
-        editor_layout = QHBoxLayout()
-        self.text_edit = TextEdit()
-        self.text_edit.setTabStopDistance(30)  # Set tab stop width
-        editor_layout.addWidget(self.text_edit)
+        # 天气按钮
+        weather_button = PrimaryPushButton(text="获取天气")
+        weather_button.clicked.connect(self.get_weather)
 
-        self.preview = TextEdit()
-        self.preview.setReadOnly(True)
+        # 显示区域
+        self.result_display = TextEdit()
+        self.result_display.setReadOnly(True)
 
-        # Alternative method
-        # self.preview = QTextBrowser()
-
-        editor_layout.addWidget(self.preview)
-
-        main_layout.addLayout(top_layout)
-        main_layout.addLayout(editor_layout)
+        main_layout.addLayout(city_layout)
+        main_layout.addWidget(weather_button)
+        main_layout.addWidget(self.result_display)
         self.setLayout(main_layout)
 
-    def update_preview(self):
-        text = self.text_edit.toPlainText()
+    def get_weather(self):
+        city = self.city_combo.currentText()
+        city_id = CITY_CODES.get(city)
 
-        html = markdown.markdown(text, extensions=['extra', 'markdown.extensions.toc'])
-        self.preview.setHtml(html)
+        try:
+            self.result_display.setPlainText(f"正在获取{city}的天气信息...")
+            url = f"http://t.weather.sojson.com/api/weather/city/{city_id}"
+            response = requests.get(url)
+            data = response.json()
 
-        # Alternative method
-        # self.preview.setMarkdown(text)
+            if data.get("status") == 200:
+                weather_info = self._format_weather_data(data)
+                self.result_display.setPlainText(weather_info)
+            else:
+                self.result_display.setPlainText(
+                    f"获取天气信息失败: {data.get('message')}"
+                )
+        except Exception as e:
+            self.result_display.setPlainText(f"发生错误: {str(e)}")
 
-    def save_file(self):
-        # 获取文件保存位置
-        # file_path, _ = QFileDialog.getSaveFileName(self, "Save File", os.path.expanduser("~"), "Text Files (*.txt)")
+    def _format_weather_data(self, data):
+        city_info = data.get("cityInfo", {})
+        weather_data = data.get("data", {})
+        today = (
+            weather_data.get("forecast", [])[0] if weather_data.get("forecast") else {}
+        )
 
-        data = {
-            "date": str(datetime.now().date()),
-            "time": str(datetime.now().time()),
-            "note": "这是一个示例备注",
-            "weather": "晴天",
-            "content": self.text_edit.toPlainText()
-        }
-        # 加密数据
-        ciphertext = self.crypto_manager.encrypt_data(pickle.dumps(data))
+        formatted_text = f"城市: {city_info.get('city', '未知')}\n"
+        formatted_text += f"更新时间: {data.get('time', '未知')}\n"
+        formatted_text += f"当前温度: {weather_data.get('wendu', '未知')}℃\n"
+        formatted_text += f"湿度: {weather_data.get('shidu', '未知')}\n"
+        formatted_text += f"空气质量: {weather_data.get('quality', '未知')}\n"
+        formatted_text += f"PM2.5: {weather_data.get('pm25', '未知')}\n"
+        formatted_text += f"PM10: {weather_data.get('pm10', '未知')}\n"
+        formatted_text += f"感冒指数: {weather_data.get('ganmao', '未知')}\n\n"
 
-        file_path = os.path.join("./data/diary_data", str(datetime.now().strftime("%Y-%m-%d"))+".enc")
-        # 如果文件路径不为空,则保存文件
-        if file_path:
-            try:
-                with open(file_path, "wb") as f:
-                    f.write(ciphertext)
-            except Exception as e:
-                print(f"Error saving file: {e}")
+        if today:
+            formatted_text += f"今日天气: {today.get('type', '未知')}\n"
+            formatted_text += (
+                f"气温: {today.get('low', '未知')} ~ {today.get('high', '未知')}\n"
+            )
+            formatted_text += f"风向: {today.get('fx', '未知')}\n"
+            formatted_text += f"风力: {today.get('fl', '未知')}\n"
+            formatted_text += f"日出: {today.get('sunrise', '未知')}\n"
+            formatted_text += f"日落: {today.get('sunset', '未知')}\n"
+            formatted_text += f"提示: {today.get('notice', '无')}"
 
-    def load_file(self,date=None):
-        # 获取文件打开位置
-        # file_path, _ = QFileDialog.getOpenFileName(self, "Open File", os.path.expanduser("~"), "Text Files (*.txt)")
-        date = date or str(datetime.now().date().strftime("%Y-%m-%d"))
-        file_path = os.path.join("./data/diary_data", date+".enc")
-        # 如果文件路径不为空,则加载文件
-        if file_path:
-            try:
-                with open(file_path, "rb") as f:
-                    ciphertext = f.read()
-                    data = pickle.loads(self.crypto_manager.decrypt_data(ciphertext))
-                    self.text_edit.setPlainText(data['content'])
-            except Exception as e:
-                print(f"Error loading file: {e}")
+        return formatted_text
 
-if __name__ == '__main__':
-    # setTheme(Theme.DARK)
 
+if __name__ == "__main__":
     app = QApplication(sys.argv)
 
-    # Install translator
+    # 安装翻译器
     translator = FluentTranslator()
     app.installTranslator(translator)
 
-    w = EditorInterface()
+    w = WeatherWidget()
+    w.resize(500, 400)
     w.show()
     app.exec()

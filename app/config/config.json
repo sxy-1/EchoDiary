@@ -11,7 +11,7 @@
     },
     "MainWindow": {
         "DpiScale": "Auto",
-        "Language": "Auto",
+        "Language": "zh_CN",
         "MicaEnabled": true
     },
     "QFluentWidgets": {

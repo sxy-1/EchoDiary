@@ -93,5 +93,5 @@ SUPPORT_URL = "https://afdian.net/a/zhiyiYo"
 
 
 cfg = Config()
-cfg.themeMode.value = Theme.LIGHT
+cfg.themeMode.value = Theme.AUTO
 qconfig.load("app/config/config.json", cfg)
