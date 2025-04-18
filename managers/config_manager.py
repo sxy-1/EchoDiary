@@ -7,6 +7,7 @@ class ConfigManager:
     DEFAULT_CONFIG = {
         "key_path": "./data/keys/",
         "password": "",  # 默认无密码
+        "diary_path": "./data/diary/",
     }
 
     def __init__(self, file_path=None):

@@ -54,10 +54,18 @@ class Main_Window(FluentWindow):
     def initNavigation(self):
         # add sub interface
         # self.addSubInterface(self.focusInterface, FIF.RINGER, '专注时段')
-        self.addSubInterface(self.editorInterface, FIF.STOP_WATCH, "写日记")
-        self.addSubInterface(self.editorInterface2, FIF.STOP_WATCH, "写日记")
-        self.addSubInterface(self.editorInterface3, FIF.STOP_WATCH, "写日记")
-        self.addSubInterface(self.calendarInterface, FIF.STOP_WATCH, "写日记")
+        self.addSubInterface(
+            self.editorInterface, FIF.STOP_WATCH, "写日记editorInterface"
+        )
+        self.addSubInterface(
+            self.editorInterface2, FIF.STOP_WATCH, "写日记editorInterface2"
+        )
+        self.addSubInterface(
+            self.editorInterface3, FIF.STOP_WATCH, "写日记editorInterface3"
+        )
+        self.addSubInterface(
+            self.calendarInterface, FIF.STOP_WATCH, "写日记editorInterface"
+        )
         self.addSubInterface(self.settingInterface, FIF.SETTING, "设置")  # 添加设置界面
 
         self.navigationInterface.addWidget(

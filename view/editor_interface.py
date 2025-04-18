@@ -118,7 +118,7 @@ class EditorInterface(QWidget):
         # self.preview.setMarkdown(text)
 
     def save_file(self):
-        # 获取文件保存位置
+        # 获取文件保存位
         # file_path, _ = QFileDialog.getSaveFileName(self, "Save File", os.path.expanduser("~"), "Text Files (*.txt)")
 
         data = {
@@ -132,7 +132,7 @@ class EditorInterface(QWidget):
         ciphertext = self.crypto_manager.encrypt_data(pickle.dumps(data))
 
         file_path = os.path.join(
-            "./data/diary_data", str(datetime.now().strftime("%Y-%m-%d")) + ".enc"
+            "./data/diary", str(datetime.now().strftime("%Y-%m-%d")) + ".enc"
         )
         # 如果文件路径不为空,则保存文件
         if file_path:
@@ -146,7 +146,7 @@ class EditorInterface(QWidget):
         # 获取文件打开位置
         # file_path, _ = QFileDialog.getOpenFileName(self, "Open File", os.path.expanduser("~"), "Text Files (*.txt)")
         date = date or str(datetime.now().date().strftime("%Y-%m-%d"))
-        file_path = os.path.join("./data/diary_data", date + ".enc")
+        file_path = os.path.join("./data/diary", date + ".enc")
         # 如果文件路径不为空,则加载文件
         if file_path:
             try:
