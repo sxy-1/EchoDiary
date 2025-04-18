@@ -1,5 +1,3 @@
-import os
-import pickle
 import sys
 from datetime import datetime
 
@@ -23,14 +21,15 @@ from qfluentwidgets import (
 )
 
 from qfluentwidgets import FluentIcon as FIF
-from managers import CryptoManager
+from managers import DiaryManager
+from models.diary import Diary
 
 
 class EditorInterface(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("EditorInterface")
-
+        self.diary_manager = DiaryManager()
         self.html = None
 
         self.initUI()
@@ -39,8 +38,7 @@ class EditorInterface(QWidget):
         self.timer.start(300)  # Update preview every 300 milliseconds
 
         # 自动加载当日日记
-        self.crypto_manager = CryptoManager()
-        self.load_file()
+        self.load_diary_to_text_edit()
 
     def initUI(self):
         main_layout = QVBoxLayout()
@@ -120,42 +118,25 @@ class EditorInterface(QWidget):
     def save_file(self):
         # 获取文件保存位
         # file_path, _ = QFileDialog.getSaveFileName(self, "Save File", os.path.expanduser("~"), "Text Files (*.txt)")
-
-        data = {
+        print("保存文件")
+        diary_dict = {
             "date": str(datetime.now().date()),
             "time": str(datetime.now().time()),
             "note": "这是一个示例备注",
             "weather": "晴天",
             "content": self.text_edit.toPlainText(),
         }
-        # 加密数据
-        ciphertext = self.crypto_manager.encrypt_data(pickle.dumps(data))
+        diary = Diary(**diary_dict)
+        res = self.diary_manager.save_diary(diary)
+        print("保存结果", res)
 
-        file_path = os.path.join(
-            "./data/diary", str(datetime.now().strftime("%Y-%m-%d")) + ".enc"
-        )
-        # 如果文件路径不为空,则保存文件
-        if file_path:
-            try:
-                with open(file_path, "wb") as f:
-                    f.write(ciphertext)
-            except Exception as e:
-                print(f"Error saving file: {e}")
-
-    def load_file(self, date=None):
-        # 获取文件打开位置
-        # file_path, _ = QFileDialog.getOpenFileName(self, "Open File", os.path.expanduser("~"), "Text Files (*.txt)")
-        date = date or str(datetime.now().date().strftime("%Y-%m-%d"))
-        file_path = os.path.join("./data/diary", date + ".enc")
-        # 如果文件路径不为空,则加载文件
-        if file_path:
-            try:
-                with open(file_path, "rb") as f:
-                    ciphertext = f.read()
-                    data = pickle.loads(self.crypto_manager.decrypt_data(ciphertext))
-                    self.text_edit.setPlainText(data["content"])
-            except Exception as e:
-                print(f"Error loading file: {e}")
+    def load_diary_to_text_edit(self):
+        date = str(datetime.now().date())
+        diary = self.diary_manager.load_diary(date)
+        if not diary:
+            print("没有找到日记")
+        else:
+            self.text_edit.setPlainText(diary.content)
 
     def share_file(self):
         # img = html_to_image(self.html)

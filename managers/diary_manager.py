@@ -32,7 +32,7 @@ class IDiaryStorage(ABC):
         pass
 
 
-class DiaryFileManager(IDiaryStorage):
+class DiaryManager(IDiaryStorage):
     """
     日记文件管理器
 
