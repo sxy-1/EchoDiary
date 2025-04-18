@@ -70,3 +70,5 @@ venv/
 .vs/
 *.sublime-project
 *.sublime-workspace
+.env/.env
+*.env
