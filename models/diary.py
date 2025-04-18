@@ -1,21 +1,21 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import Optional
-from datetime import datetime
 
 
 class Diary(BaseModel):
     """日记条目数据模型，使用Pydantic进行数据验证"""
 
-    date: str = Field(default_factory=lambda: str(datetime.now().date()))
-    time: str = Field(default_factory=lambda: str(datetime.now().time()))
-    content: str = ""
+    date: Optional[str] = None
+    content: Optional[str] = None
     weather: Optional[str] = None
     note: Optional[str] = None
-    last_rrmodified: str = Field(default_factory=lambda: str(datetime.now()))
+    create_time: Optional[str] = None
+    update_time: Optional[str] = None
 
     class Config:
         """模型配置"""
 
+        frozen = False
         arbitrary_types_allowed = True
 
     def __str__(self) -> str:

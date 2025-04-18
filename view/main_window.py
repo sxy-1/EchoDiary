@@ -45,7 +45,7 @@ class Main_Window(FluentWindow):
         print("cao")
         # todo: 保存原editor
 
-        self.editorInterface.load_file(date=date)
+        self.editorInterface.load_diary_to_text_edit(date=date)
         self.switchTo(self.editorInterface)
 
     def check(self):

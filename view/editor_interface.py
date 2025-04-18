@@ -37,6 +37,7 @@ class EditorInterface(QWidget):
         self.timer.timeout.connect(self.update_preview)
         self.timer.start(300)  # Update preview every 300 milliseconds
 
+        self.diary = None
         # 自动加载当日日记
         self.load_diary_to_text_edit()
 
@@ -62,7 +63,7 @@ class EditorInterface(QWidget):
                 Action(FIF.INFO, self.tr("Info")),
                 Action(FIF.DELETE, self.tr("Delete")),
                 Action(FIF.SHARE, self.tr("Share")),
-                Action(FIF.SAVE, self.tr("Save")),
+                Action(FIF.SAVE, self.tr("Save"), shortcut="Ctrl+S"),
             ]
         )
 
@@ -116,27 +117,28 @@ class EditorInterface(QWidget):
         # self.preview.setMarkdown(text)
 
     def save_file(self):
-        # 获取文件保存位
-        # file_path, _ = QFileDialog.getSaveFileName(self, "Save File", os.path.expanduser("~"), "Text Files (*.txt)")
         print("保存文件")
-        diary_dict = {
-            "date": str(datetime.now().date()),
-            "time": str(datetime.now().time()),
-            "note": "这是一个示例备注",
-            "weather": "晴天",
+
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        update_data = {
             "content": self.text_edit.toPlainText(),
+            "update_time": current_time,
+            "create_time": self.diary.create_time or current_time,
         }
-        diary = Diary(**diary_dict)
-        res = self.diary_manager.save_diary(diary)
+
+        self.diary = self.diary.copy(update=update_data)
+        res = self.diary_manager.save_diary(self.diary)
         print("保存结果", res)
 
-    def load_diary_to_text_edit(self):
-        date = str(datetime.now().date())
-        diary = self.diary_manager.load_diary(date)
-        if not diary:
-            print("没有找到日记")
-        else:
-            self.text_edit.setPlainText(diary.content)
+    def load_diary_to_text_edit(self, date=None):
+        print("load_diary_to_text_edit" + str(date))
+        date = date or str(datetime.now().date())
+        self.diary = self.diary_manager.load_diary(date)
+        if not self.diary:
+            self.diary = Diary(
+                date=date,
+            )
+        self.text_edit.setPlainText(self.diary.content)
 
     def share_file(self):
         # img = html_to_image(self.html)

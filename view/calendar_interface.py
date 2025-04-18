@@ -1,13 +1,10 @@
-import os
-import pickle
 import sys
-from datetime import datetime
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QCalendarWidget, QWidget
-from PySide6.QtGui import QPainter, QColor, QBrush
-from PySide6.QtCore import QDate, Signal
+from PySide6.QtWidgets import QApplication, QCalendarWidget
+from PySide6.QtGui import QColor, QBrush
+from PySide6.QtCore import Signal
 
-from managers import crypto_manager
+from managers import DiaryManager
 
 StyleSheet = """
 /*顶部导航区域*/
@@ -99,18 +96,20 @@ CalendarWidget QToolButton::menu-indicator {
 }
 """
 
+
 class CalendarInterface(QCalendarWidget):
     calendar_switchTo_editor_signal = Signal(str)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
         self.setObjectName("MarkedCalendar")
-        self.dates = None
+        self.diary_manager = DiaryManager()
         self.load_diary_dates()
-
+        self.dates = []
         self.marked_dates = []
 
-        self.clicked.connect(self.load_diary_date)
+        self.clicked.connect(self.date_clicked)
 
         # 应用样式表
         self.setStyleSheet(StyleSheet)
@@ -125,32 +124,19 @@ class CalendarInterface(QCalendarWidget):
             # 绘制较大的椭圆
             painter.drawEllipse(rect.center(), 15, 15)
             painter.restore()
-    def load_diary_dates(self):
-        dates = []
-        try:
-            with open("dates.txt", 'r') as file:
-                for line in file:
-                    date = QDate.fromString(line.strip(), 'yyyy-MM-dd')
-                    if date.isValid():
-                        dates.append(date)
-        except Exception as e:
-            print(f"Error reading dates from file: {e}")
-        self.dates = dates
-        print(dates)
-        return dates
 
-    def load_diary_date(self, date):
+    def load_diary_dates(self):
+        self.dates = self.diary_manager.get_all_dates()
+
+    def date_clicked(self, date):
         print(date)
         date = date.toString("yyyy-MM-dd")
         print(date)
         self.calendar_switchTo_editor_signal.emit(date)
-        # self.calendar_switchTo_editor_signal.emit(date)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app = QApplication(sys.argv)
-
-    # Replace 'dates.txt' with the path to your date file
-
 
     window = CalendarInterface()
     window.show()
