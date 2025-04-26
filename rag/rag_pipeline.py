@@ -1,9 +1,13 @@
+from rag.rag_retriever import RAGRetriever
+from rag.llm_generator import LLMGenerator
+
+
 class RAGPipeline:
     """
     RAG 流水线类，整合检索和生成功能。
     """
 
-    def __init__(self, retriever, generator):
+    def __init__(self, retriever: RAGRetriever, generator: LLMGenerator):
         """
         初始化 RAG 流水线。
         :param retriever: RAGRetriever 实例。
@@ -22,5 +26,6 @@ class RAGPipeline:
         # 检索相关文档
         docs = self.retriever.retrieve(query, k)
         # 生成回答
-        answer = self.generator.generate(query, docs)
+        context = "\n".join([doc.page_content for doc in docs])
+        answer = self.generator.qa_context_predict(query, context)
         return answer

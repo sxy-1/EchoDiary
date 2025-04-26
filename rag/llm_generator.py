@@ -1,4 +1,5 @@
 from langchain_openai import ChatOpenAI
+from prompts import QA_CONTEXT_PROMPT
 
 
 class LLMGenerator:
@@ -17,21 +18,21 @@ class LLMGenerator:
             # 其他参数...
         )
 
-    def generate(self, query, docs):
+    def prompt_predict(self, prompt):
+        print("prompt:\n", prompt)
+        response = self.llm.invoke(prompt)
+        return response
+
+    def qa_context_predict(self, query, context):
         """
         根据上下文和查询生成回答。
         :param query: 用户查询。
         :param docs: 检索到的文档列表。
         :return: LLM 生成的回答。
         """
-        # 拼接检索到的文档内容作为上下文
-        context = "\n".join([doc.page_content for doc in docs])
-        prompt = f"""
-        你是一个知识丰富的助手。根据以下上下文回答问题：
-        上下文: {context}
-        问题: {query}
-        答案:
-        """
-        print("prompt:\n", prompt)
-        response = self.llm.invoke(prompt)
+        # 使用提示模板变量生成提示
+        prompt = QA_CONTEXT_PROMPT.format(query=query, context=context)
+
+        # 调用 LLM 并返回响应
+        response = self.prompt_predict(prompt)
         return response
