@@ -19,6 +19,7 @@ from view.editor_interface import EditorInterface
 from view.editor_interface_2 import EditorInterface2
 from view.editor_interface_3 import EditorInterface3
 from view.setting_interface import SettingInterface  # 导入 SettingInterface
+from dotenv import load_dotenv
 
 
 class Main_Window(FluentWindow):
@@ -49,7 +50,7 @@ class Main_Window(FluentWindow):
         self.switchTo(self.editorInterface)
 
     def check(self):
-        pass
+        load_dotenv(".env/.env")
 
     def initNavigation(self):
         # add sub interface

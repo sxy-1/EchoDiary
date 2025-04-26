@@ -1,5 +1,5 @@
 from langchain_openai import ChatOpenAI
-from prompts import QA_CONTEXT_PROMPT
+from prompts import QA_CONTEXT_PROMPT, DIARY_GENERATE_PROMPT
 
 
 class LLMGenerator:
@@ -32,6 +32,20 @@ class LLMGenerator:
         """
         # 使用提示模板变量生成提示
         prompt = QA_CONTEXT_PROMPT.format(query=query, context=context)
+
+        # 调用 LLM 并返回响应
+        response = self.prompt_predict(prompt)
+        return response
+
+    def diary_generate_predict(self, input_text):
+        """
+        根据上下文和查询生成回答。
+        :param query: 用户查询。
+        :param docs: 检索到的文档列表。
+        :return: LLM 生成的回答。
+        """
+        # 使用提示模板变量生成提示
+        prompt = DIARY_GENERATE_PROMPT.format(input_text=input_text)
 
         # 调用 LLM 并返回响应
         response = self.prompt_predict(prompt)

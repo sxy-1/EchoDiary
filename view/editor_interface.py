@@ -14,7 +14,6 @@ from PySide6.QtCore import QTimer, Qt
 import markdown
 from qfluentwidgets import (
     FluentTranslator,
-    PrimaryPushButton,
     TextEdit,
     CommandBar,
     Action,
@@ -23,6 +22,7 @@ from qfluentwidgets import (
 from qfluentwidgets import FluentIcon as FIF
 from managers import DiaryManager
 from models.diary import Diary
+from rag.llm_generator import LLMGenerator
 
 
 class EditorInterface(QWidget):
@@ -30,6 +30,7 @@ class EditorInterface(QWidget):
         super().__init__(parent)
         self.setObjectName("EditorInterface")
         self.diary_manager = DiaryManager()
+        self.llm_generator = LLMGenerator()
         self.html = None
 
         self.initUI()
@@ -62,6 +63,7 @@ class EditorInterface(QWidget):
                 Action(FIF.EDIT, self.tr("Edit"), checkable=True),
                 Action(FIF.INFO, self.tr("Info")),
                 Action(FIF.DELETE, self.tr("Delete")),
+                Action(FIF.PENCIL_INK, self.tr("AI 扩写")),
                 Action(FIF.SHARE, self.tr("Share")),
                 Action(FIF.SAVE, self.tr("Save"), shortcut="Ctrl+S"),
             ]
@@ -71,8 +73,13 @@ class EditorInterface(QWidget):
         save_action = bar.actions()[-1]  # Assuming Save is the last added action
         save_action.triggered.connect(self.save_file)
 
+        # Share action
         share_action = bar.actions()[-2]
         share_action.triggered.connect(self.share_file)
+
+        # AI 扩写
+        diary_generate_action = bar.actions()[-3]
+        diary_generate_action.triggered.connect(self.diary_generate)
 
         bar.addHiddenActions(
             [
@@ -80,12 +87,13 @@ class EditorInterface(QWidget):
             ]
         )
         top_layout.addWidget(bar)
-        save_button = PrimaryPushButton(text="Save")
-        save_button.clicked.connect(self.save_file)
 
-        # date_button = PrimaryPushButton(text=datetime.now().strftime("%Y-%m-%d"))
-        # top_layout.addWidget(save_button)
-        # top_layout.addWidget(date_button)
+        # save_button = PrimaryPushButton(text="Save")
+        # save_button.clicked.connect(self.save_file)
+
+        # # date_button = PrimaryPushButton(text=datetime.now().strftime("%Y-%m-%d"))
+        # # top_layout.addWidget(save_button)
+        # # top_layout.addWidget(date_button)
 
         # Layout for text editor and preview
         editor_layout = QHBoxLayout()
@@ -165,6 +173,12 @@ class EditorInterface(QWidget):
         )
         if save_path:
             self.webview.grab().save(save_path)
+
+    def diary_generate(self):
+        response = self.llm_generator.diary_generate_predict(
+            self.text_edit.toPlainText()
+        )
+        self.text_edit.setPlainText(response)
 
 
 if __name__ == "__main__":
