@@ -5,6 +5,7 @@ from PySide6.QtGui import QColor, QBrush
 from PySide6.QtCore import Signal
 
 from managers import DiaryManager
+from PySide6.QtCore import QDate
 
 StyleSheet = """
 /*顶部导航区域*/
@@ -105,8 +106,8 @@ class CalendarInterface(QCalendarWidget):
         self.parent = parent
         self.setObjectName("MarkedCalendar")
         self.diary_manager = DiaryManager()
-        self.load_diary_dates()
         self.dates = []
+        self.load_diary_dates()
         self.marked_dates = []
 
         self.clicked.connect(self.date_clicked)
@@ -127,6 +128,10 @@ class CalendarInterface(QCalendarWidget):
 
     def load_diary_dates(self):
         self.dates = self.diary_manager.get_all_dates()
+        self.dates = [
+            QDate.fromString(date_str, "yyyy-MM-dd")
+            for date_str in self.diary_manager.get_all_dates()
+        ]
 
     def date_clicked(self, date):
         print(date)
