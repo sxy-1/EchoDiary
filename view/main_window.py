@@ -1,4 +1,5 @@
 # coding:utf-8
+import os
 import sys
 
 from PySide6.QtCore import QUrl
@@ -25,7 +26,7 @@ from dotenv import load_dotenv
 class Main_Window(FluentWindow):
     def __init__(self):
         super().__init__()
-
+        self.check()
         # create sub interface
 
         self.editorInterface = EditorInterface(self)
@@ -39,7 +40,6 @@ class Main_Window(FluentWindow):
         )
         self.initNavigation()
         self.initWindow()
-        self.check()
 
     def calendar_switchTo_editor(self, date):
         print(date)
@@ -50,6 +50,8 @@ class Main_Window(FluentWindow):
         self.switchTo(self.editorInterface)
 
     def check(self):
+        cwd = os.getcwd()
+        print(cwd)
         load_dotenv(".env/.env")
 
     def initNavigation(self):

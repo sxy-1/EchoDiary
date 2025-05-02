@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 import sys
 from datetime import datetime
 
@@ -9,7 +10,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QFileDialog,
 )
-
+from qfluentwidgets import StateToolTip
 from PySide6.QtCore import QTimer, Qt
 import markdown
 from qfluentwidgets import (
@@ -23,11 +24,14 @@ from qfluentwidgets import FluentIcon as FIF
 from managers import DiaryManager
 from models.diary import Diary
 from rag.llm_generator import LLMGenerator
+from common import signalBus
 
 
 class EditorInterface(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.executor = ThreadPoolExecutor(max_workers=1)  # 创建线程池
+
         self.setObjectName("EditorInterface")
         self.diary_manager = DiaryManager()
         self.llm_generator = LLMGenerator()
@@ -113,6 +117,8 @@ class EditorInterface(QWidget):
         main_layout.addLayout(editor_layout)
         self.setLayout(main_layout)
 
+        self.stateTooltip = None
+
     def update_preview(self):
         text = self.text_edit.toPlainText()
 
@@ -175,10 +181,65 @@ class EditorInterface(QWidget):
             self.webview.grab().save(save_path)
 
     def diary_generate(self):
-        response = self.llm_generator.diary_generate_predict(
-            self.text_edit.toPlainText()
-        )
-        self.text_edit.setPlainText(response)
+        try:
+            signalBus.editor_interface_generate_finished_signal.connect(
+                self.update_ui_with_response
+            )
+            self.stateTooltip = StateToolTip("AI正在生成", "客官请耐心等待哦~~", self)
+            # 移动到perview右下角
+            preview_geometry = self.preview.geometry()
+            tooltip_x = (
+                preview_geometry.x()
+                + preview_geometry.width()
+                - self.stateTooltip.width()
+            )
+            tooltip_y = (
+                preview_geometry.y()
+                + preview_geometry.height()
+                - self.stateTooltip.height()
+            )
+            self.stateTooltip.move(tooltip_x, tooltip_y)
+            self.stateTooltip.show()
+
+            self.text_edit.setEnabled(False)
+
+            # 提交生成任务到线程池
+            future = self.executor.submit(
+                self.llm_generator.diary_generate_predict, self.text_edit.toPlainText()
+            )
+            future.add_done_callback(self.on_generate_finished)
+        except Exception as e:
+            print("生成失败", e)
+            self.stateTooltip.setContent("生成失败")
+            self.stateTooltip.setState(True)
+            self.stateTooltip = None
+
+    def on_generate_finished(self, future):
+        # 在主线程中更新 UI
+        try:
+            response = future.result()
+            print("生成结果", response)
+            signalBus.editor_interface_generate_finished_signal.emit(response)
+        except Exception as e:
+            print("生成失败", e)
+            signalBus.editor_interface_generate_finished_signal.emit("")
+
+    def update_ui_with_response(self, response):
+        try:
+            print(
+                "开始更新UI", response[:30] + "..." if len(response) > 30 else response
+            )
+            if len(response) > 0:
+                self.text_edit.setPlainText(response)
+            self.text_edit.setEnabled(True)
+            if self.stateTooltip:
+                self.stateTooltip.setContent("生成完成啦 😆")
+                self.stateTooltip.setState(True)
+                self.stateTooltip = None
+
+            print("UI更新完成")
+        except Exception as e:
+            print("UI更新失败:", str(e))
 
 
 if __name__ == "__main__":

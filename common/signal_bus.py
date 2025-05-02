@@ -8,6 +8,7 @@ class SignalBus(QObject):
     switchToSampleCard = Signal(str, int)
     micaEnableChanged = Signal(bool)
     supportSignal = Signal()
+    editor_interface_generate_finished_signal = Signal(str)
 
 
 signalBus = SignalBus()

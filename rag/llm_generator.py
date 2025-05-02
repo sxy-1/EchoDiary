@@ -21,7 +21,8 @@ class LLMGenerator:
     def prompt_predict(self, prompt):
         print("prompt:\n", prompt)
         response = self.llm.invoke(prompt)
-        return response
+        print("response:\n", response)
+        return response.content
 
     def qa_context_predict(self, query, context):
         """
