@@ -1,16 +1,16 @@
-from rag.rag_retriever import RAGRetriever
+from rag.rag_retriever import RagRetriever
 from rag.llm_generator import LLMGenerator
 
 
-class RAGPipeline:
+class RagPipeline:
     """
     RAG 流水线类，整合检索和生成功能。
     """
 
-    def __init__(self, retriever: RAGRetriever, generator: LLMGenerator):
+    def __init__(self, retriever: RagRetriever, generator: LLMGenerator):
         """
         初始化 RAG 流水线。
-        :param retriever: RAGRetriever 实例。
+        :param retriever: RagRetriever 实例。
         :param generator: LLMGenerator 实例。
         """
         self.retriever = retriever

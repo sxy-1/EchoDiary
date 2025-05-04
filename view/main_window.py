@@ -55,9 +55,7 @@ class Main_Window(FluentWindow):
     def initNavigation(self):
         # add sub interface
         # self.addSubInterface(self.focusInterface, FIF.RINGER, '专注时段')
-        self.addSubInterface(
-            self.editorInterface, FIF.DOCUMENT, "写日记editorInterface"
-        )
+        self.addSubInterface(self.editorInterface, FIF.LABEL, "写日记editorInterface")
 
         self.addSubInterface(self.editorInterface3, FIF.EDIT, "写日记editorInterface3")
         self.addSubInterface(self.calendarInterface, FIF.CALENDAR, "日历")

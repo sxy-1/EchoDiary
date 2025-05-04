@@ -25,6 +25,9 @@ from managers import DiaryManager
 from models.diary import Diary
 from rag.llm_generator import LLMGenerator
 from common import signalBus
+from view.chat_window import ChatWindow
+
+from PySide6.QtWidgets import QPushButton
 
 
 class EditorInterface(QWidget):
@@ -47,6 +50,7 @@ class EditorInterface(QWidget):
         self.load_diary_to_text_edit()
 
     def initUI(self):
+        self.stateTooltip = None
         main_layout = QVBoxLayout()
 
         # Top layout for buttons
@@ -92,14 +96,13 @@ class EditorInterface(QWidget):
         )
         top_layout.addWidget(bar)
 
-        # save_button = PrimaryPushButton(text="Save")
-        # save_button.clicked.connect(self.save_file)
+        # 添加展开按钮到 top_layout 的右侧
+        self.chat_toggle_button = QPushButton("◀")  # 左三角按钮
+        self.chat_toggle_button.setFixedSize(20, 20)
+        self.chat_toggle_button.clicked.connect(self.toggle_chat_window)
+        top_layout.addWidget(self.chat_toggle_button, alignment=Qt.AlignRight)
 
-        # # date_button = PrimaryPushButton(text=datetime.now().strftime("%Y-%m-%d"))
-        # # top_layout.addWidget(save_button)
-        # # top_layout.addWidget(date_button)
-
-        # Layout for text editor and preview
+        # Layout for text editor, preview, and chat window
         editor_layout = QHBoxLayout()
         self.text_edit = TextEdit()
         self.text_edit.setTabStopDistance(30)  # Set tab stop width
@@ -107,17 +110,25 @@ class EditorInterface(QWidget):
 
         self.preview = TextEdit()
         self.preview.setReadOnly(True)
-
-        # Alternative method
-        # self.preview = QTextBrowser()
-
         editor_layout.addWidget(self.preview)
+
+        # 创建聊天窗口
+        self.chat_window = ChatWindow()
+        self.chat_window.setVisible(False)  # 默认隐藏
+        editor_layout.addWidget(self.chat_window)  # 添加到 editor_layout
 
         main_layout.addLayout(top_layout)
         main_layout.addLayout(editor_layout)
         self.setLayout(main_layout)
 
-        self.stateTooltip = None
+    def toggle_chat_window(self):
+        """展开或折叠聊天窗口"""
+        if self.chat_window.isVisible():
+            self.chat_window.setVisible(False)
+            self.chat_toggle_button.setText("◀")  # 左三角按钮
+        else:
+            self.chat_window.setVisible(True)
+            self.chat_toggle_button.setText("▶")  # 右三角按钮
 
     def update_preview(self):
         text = self.text_edit.toPlainText()

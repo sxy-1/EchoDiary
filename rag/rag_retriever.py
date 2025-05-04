@@ -2,7 +2,7 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 
 
-class RAGRetriever:
+class RagRetriever:
     """
     RAG 检索器类，用于管理文档嵌入和检索。
     """
