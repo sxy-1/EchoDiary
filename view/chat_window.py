@@ -1,3 +1,4 @@
+import socket
 from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -10,10 +11,12 @@ from PySide6.QtWidgets import (
     QPushButton,
     QLabel,
     QProgressBar,
+    QTextEdit,
 )
 from PySide6.QtGui import QPixmap
 from PySide6.QtCore import Qt, QThread, Signal
 from rag.llm_chat_with_history import LlmChatWithHistory
+from PySide6.QtGui import QTextOption
 
 
 class LlmThread(QThread):
@@ -82,11 +85,27 @@ class ChatMessageWidget(QWidget):
 
         username_label = QLabel(username)
         username_label.setStyleSheet("font-weight: bold; color: #555;")
-        message_label = QLabel(message)
-        message_label.setWordWrap(True)
+        message_label = QTextEdit(message)
+        message_label.setReadOnly(True)  # 设置为只读
         message_label.setStyleSheet(
-            "background-color: #f0f0f0; border-radius: 10px; padding: 8px;"
+            """
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            padding: 8px;
+            margin: 0px;
+            """
         )
+        message_label.setWordWrapMode(
+            QTextOption.WrapAtWordBoundaryOrAnywhere
+        )  # 启用自动换行
+        message_label.setFocusPolicy(Qt.NoFocus)  # 禁用焦点
+        message_label.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)  # 隐藏滚动条
+        message_label.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)  # 隐藏滚动条
+
+        # 动态调整高度
+        message_label.document().setTextWidth(message_label.viewport().width())
+        document_height = message_label.document().size().height()
+        message_label.setFixedHeight(document_height + 10)  # 添加额外的高度以适应边距
 
         message_layout.addWidget(username_label)
         message_layout.addWidget(message_label)
@@ -94,15 +113,86 @@ class ChatMessageWidget(QWidget):
         return message_widget
 
 
+class SocketThread(QThread):
+    """用于后台处理Socket通信的线程"""
+
+    message_received = Signal(str)
+
+    def __init__(self, host="127.0.0.1", port=5000):
+        super().__init__()
+        self.host = host
+        self.port = port
+        self.running = True
+
+    def run(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
+            try:
+                client_socket.connect((self.host, self.port))
+                print(f"Connected to server at {self.host}:{self.port}")
+                while self.running:
+                    data = client_socket.recv(1024)  # 接收数据
+                    if not data:
+                        break
+                    print(f"Received data: {data.decode('utf-8')}")
+
+                    decoded_message = data.decode("utf-8")
+                    if "转写" in decoded_message or "林黛玉" in decoded_message:
+                        continue
+                    print(f"Received message: {decoded_message}")
+                    self.message_received.emit(decoded_message)
+            except ConnectionRefusedError:
+                print("Failed to connect to the server. Is it running?")
+            except Exception as e:
+                print(f"Socket error: {e}")
+
+    def stop(self):
+        """停止线程"""
+        self.running = False
+        self.quit()
+        self.wait()
+
+
 class ChatWindow(QMainWindow):
     def __init__(self, llm_generator):
         super().__init__()
         self.setWindowTitle("AI聊天界面")
         self.setGeometry(100, 100, 500, 700)
-
+        # 设置深色背景
+        self.setStyleSheet(
+            """
+            QMainWindow {
+                background-color: #2b2b2b;  /* 深灰色背景 */
+                color: #ffffff;  /* 默认字体颜色为白色 */
+            }
+            QListWidget {
+                background-color: #3c3c3c;  /* 聊天记录区域背景 */
+                color: #ffffff;  /* 聊天记录字体颜色 */
+            }
+            QLineEdit {
+                background-color: #444444;  /* 输入框背景 */
+                color: #ffffff;  /* 输入框字体颜色 */
+                border: 1px solid #555555;  /* 边框颜色 */
+                border-radius: 5px;  /* 圆角 */
+            }
+            QPushButton {
+                background-color: #555555;  /* 按钮背景 */
+                color: #ffffff;  /* 按钮字体颜色 */
+                border: none;
+                border-radius: 5px;
+                padding: 5px;
+            }
+            QPushButton:hover {
+                background-color: #666666;  /* 按钮悬停背景 */
+            }
+            QPushButton:pressed {
+                background-color: #777777;  /* 按钮按下背景 */
+            }
+            """
+        )
         # 初始化LLM相关组件
         self.chat_manager = LlmChatWithHistory(llm_generator)
         self.llm_thread = None
+        self.socket_thread = None
 
         # 主窗口部件
         central_widget = QWidget()
@@ -137,6 +227,12 @@ class ChatWindow(QMainWindow):
         self.send_button.clicked.connect(self.send_message)
         input_layout.addWidget(self.send_button)
 
+        # 语音按钮
+        self.voice_button = QPushButton("语音")
+        self.voice_button.setCheckable(True)
+        self.voice_button.clicked.connect(self.toggle_voice_mode)
+        input_layout.addWidget(self.voice_button)
+
         main_layout.addLayout(input_layout)
 
         # 欢迎消息
@@ -147,6 +243,22 @@ class ChatWindow(QMainWindow):
             alignment=Qt.AlignLeft,
         )
 
+        # 启动Socket线程
+        self.start_socket_thread()
+
+    def toggle_voice_mode(self):
+        """切换语音模式"""
+        if self.voice_button.isChecked():
+            self.voice_button.setStyleSheet("background-color: #87CEEB;")  # 高亮
+        else:
+            self.voice_button.setStyleSheet("")  # 恢复默认样式
+
+    def start_socket_thread(self):
+        """启动Socket通信线程"""
+        self.socket_thread = SocketThread()
+        self.socket_thread.message_received.connect(self.send_message)
+        self.socket_thread.start()
+
     def add_message(self, username, avatar_path, message, alignment=Qt.AlignLeft):
         """添加一条消息到聊天记录"""
         message_widget = ChatMessageWidget(username, avatar_path, message, alignment)
@@ -156,14 +268,24 @@ class ChatWindow(QMainWindow):
         self.chat_list.setItemWidget(list_item, message_widget)
         self.chat_list.scrollToBottom()
 
-    def send_message(self):
+    def send_message(self, message):
         """发送消息并获取AI回复"""
-        message = self.input_field.text().strip()
-        if not message:
+        print(f"发送消息: {message}")
+        print(f"语音模式: {self.voice_button.isChecked()}")
+        if message and not self.voice_button.isChecked():
+            # 非语音模式下不处理消息
             return
 
+        if not message:
+            message = self.input_field.text().strip()
+            if message:
+                self.input_field.clear()
+            else:
+                return
         # 显示用户消息
         self.add_message("你", "user_avatar.png", message, alignment=Qt.AlignRight)
+
+        # 显示用户消息
         self.input_field.clear()
 
         # 禁用输入区域并显示进度条
@@ -186,9 +308,18 @@ class ChatWindow(QMainWindow):
         # 显示AI回复
         self.add_message("AI助手", "ai_avatar.png", response, alignment=Qt.AlignLeft)
 
+    def closeEvent(self, event):
+        """关闭窗口时停止Socket线程"""
+        if self.socket_thread:
+            self.socket_thread.stop()
+        super().closeEvent(event)
+
 
 if __name__ == "__main__":
     app = QApplication([])
-    window = ChatWindow()
+    from rag.llm_generator import LLMGenerator
+
+    llm = LLMGenerator()
+    window = ChatWindow(llm)
     window.show()
     app.exec()

@@ -216,16 +216,20 @@ class EditorInterface(QWidget):
     #     # self.llm_thread.start()
     #     self.chat_window.handle_ai_response(result["output"])
     # 重写 chat_window 的 send_message 方法
-    def send_message(self):
-        message = self.chat_window.input_field.text().strip()
-        if not message:
+    def send_message(self, message=None):
+        if message and not self.chat_window.voice_button.isChecked():
+            # 非语音模式下不处理消息
             return
-
+        if not message:
+            message = self.chat_window.input_field.text().strip()
+            if message:
+                self.chat_window.input_field.clear()
+            else:
+                return
         # 显示用户消息
         self.chat_window.add_message(
             "你", "user_avatar.png", message, alignment=Qt.AlignRight
         )
-        self.chat_window.input_field.clear()
 
         # 禁用输入区域并显示进度条
         self.chat_window.input_field.setEnabled(False)

@@ -12,11 +12,13 @@ class LLMGenerator:
         初始化 LLM 生成器。
         :param model_name: 使用的 LLM 模型名称。
         """
+        print("LLMGenerator init")
         self.llm = ChatOpenAI(
             model_name=model_name,  # 或您使用的其他聊天模型
             temperature=0,
             # 其他参数...
         )
+        print("LLMGenerator init done")
 
     def prompt_predict(self, prompt):
         print("prompt:\n", prompt)
