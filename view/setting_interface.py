@@ -20,7 +20,8 @@ from qfluentwidgets import InfoBar, SearchLineEdit
 from PySide6.QtWidgets import QCompleter
 from PySide6.QtCore import Qt, QUrl, QStandardPaths
 from PySide6.QtGui import QDesktopServices
-from PySide6.QtWidgets import QWidget, QLabel, QFileDialog
+from PySide6.QtWidgets import QWidget, QLabel, QFileDialog, QLineEdit
+
 
 from common.config import cfg, HELP_URL, FEEDBACK_URL, AUTHOR, VERSION, YEAR, isWin11
 from common.signal_bus import signalBus
@@ -28,6 +29,9 @@ from common.style_sheet import StyleSheet
 import sys
 from PySide6.QtWidgets import QApplication
 from qfluentwidgets import Theme
+from PySide6.QtWidgets import QInputDialog
+
+from managers.config_manager import ConfigManager
 
 
 class SettingInterface(ScrollArea):
@@ -40,6 +44,11 @@ class SettingInterface(ScrollArea):
 
         # setting label
         self.settingLabel = QLabel(self.tr("Settings"), self)
+        # 添加配置管理器
+        self.configManager = ConfigManager()
+        self.configGroup = SettingCardGroup(self.tr("Configuration"), self.scrollWidget)
+        self.__initConfigSettings()
+        self.expandLayout.addWidget(self.configGroup)
 
         # region  天气
 
@@ -241,6 +250,94 @@ class SettingInterface(ScrollArea):
         # initialize layout
         self.__initLayout()
         self.__connectSignalToSlot()
+
+    def __initConfigSettings(self):
+        """初始化配置设置"""
+
+        # 环境路径
+        self.envPathCard = PrimaryPushSettingCard(
+            self.tr("环境路径"),
+            FIF.FOLDER,
+            self.tr("设置环境路径"),
+            self.configManager.get_config_value("env_path", "./"),
+            self.configGroup,
+        )
+        self.envPathCard.clicked.connect(
+            lambda: self.__onPathCardClicked("env_path", self.envPathCard)
+        )
+
+        # 日记路径
+        self.diaryPathCard = PrimaryPushSettingCard(
+            self.tr("日记路径"),
+            FIF.FOLDER,
+            self.tr("设置日记路径"),
+            self.configManager.get_config_value("diary_path", "./data/diary/"),
+            self.configGroup,
+        )
+        self.diaryPathCard.clicked.connect(
+            lambda: self.__onPathCardClicked("diary_path", self.diaryPathCard)
+        )
+
+        # 密钥路径
+        self.keyPathCard = PrimaryPushSettingCard(
+            self.tr("密钥路径"),
+            FIF.FOLDER,
+            self.tr("设置密钥路径"),
+            self.configManager.get_config_value("key_path", "./data/keys/"),
+            self.configGroup,
+        )
+        self.keyPathCard.clicked.connect(
+            lambda: self.__onPathCardClicked("key_path", self.keyPathCard)
+        )
+
+        # 密码
+        self.passwordCard = PrimaryPushSettingCard(
+            self.tr("密码"),
+            FIF.FOLDER,
+            self.tr("设置密码"),
+            "******"
+            if self.configManager.get_config_value("password")
+            else self.tr("未设置"),
+            self.configGroup,
+        )
+        self.passwordCard.clicked.connect(self.__onPasswordCardClicked)
+
+        # 添加卡片到组
+        self.configGroup.addSettingCard(self.envPathCard)
+        self.configGroup.addSettingCard(self.diaryPathCard)
+        self.configGroup.addSettingCard(self.keyPathCard)
+        self.configGroup.addSettingCard(self.passwordCard)
+
+    def __onPathCardClicked(self, config_key, card):
+        """处理路径选择"""
+        folder = QFileDialog.getExistingDirectory(self, self.tr("选择目录"), "./")
+        if folder:
+            self.configManager.set_config_value(config_key, folder)
+            card.setContent(folder)
+            InfoBar.success(
+                self.tr("配置已更新"),
+                self.tr(f"{config_key} 已更新"),
+                duration=1500,
+                parent=self,
+            )
+
+    def __onPasswordCardClicked(self):
+        """处理密码设置"""
+        password, ok = QInputDialog.getText(
+            self,
+            self.tr("设置密码"),
+            self.tr("输入新密码:"),
+            QLineEdit.Password,
+        )
+        if ok and password:
+            self.configManager.set_config_value("password", password)
+            self.passwordCard.setContent("******")
+            InfoBar.success(
+                self.tr("密码已更新"),
+                self.tr("密码已成功更新"),
+                duration=1500,
+                parent=self,
+            )
 
     def __initLayout(self):
         self.settingLabel.move(36, 30)

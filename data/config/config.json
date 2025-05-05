@@ -1,5 +1,6 @@
 {
     "key_path": "./data/keys/",
-    "password": "123456",
-    "diary_path": "./data/diary/"
+    "password": "000000",
+    "diary_path": "./data/diary/",
+    "theme": "\u6d45\u8272"
 }

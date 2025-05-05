@@ -34,11 +34,11 @@ class EditorInterface(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.executor = ThreadPoolExecutor(max_workers=1)  # 创建线程池
-        self.rag_retriever = None
         self.setObjectName("EditorInterface")
         self.diary_manager = DiaryManager()
         self.llm_generator = LLMGenerator()
         self.html = None
+        self.rag_retriever = RagRetriever(self.diary_manager.get_all_diaries_str())
 
         self.initUI()
         self.timer = QTimer(self)
@@ -57,43 +57,77 @@ class EditorInterface(QWidget):
         top_layout = QHBoxLayout()
         bar = CommandBar()
         bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+
+        # 第一栏：AI 扩写、分享、保存
         bar.addActions(
             [
-                Action(FIF.ADD, self.tr("Add")),
-                Action(FIF.ROTATE, self.tr("Rotate")),
-                Action(FIF.ZOOM_IN, self.tr("Zoom in")),
-                Action(FIF.ZOOM_OUT, self.tr("Zoom out")),
+                Action(FIF.PENCIL_INK, self.tr("AI 扩写")),  # AI 扩写
+                Action(FIF.SHARE, self.tr("Share")),  # 分享
+                Action(FIF.SAVE, self.tr("Save"), shortcut="Ctrl+S"),  # 保存
             ]
         )
+
         bar.addSeparator()
+
+        # 第二栏：常见文本编辑功能
         bar.addActions(
             [
-                Action(FIF.EDIT, self.tr("Edit"), checkable=True),
-                Action(FIF.INFO, self.tr("Info")),
-                Action(FIF.DELETE, self.tr("Delete")),
-                Action(FIF.PENCIL_INK, self.tr("AI 扩写")),
-                Action(FIF.SHARE, self.tr("Share")),
-                Action(FIF.SAVE, self.tr("Save"), shortcut="Ctrl+S"),
+                Action(FIF.COPY, self.tr("Copy"), shortcut="Ctrl+C"),  # 复制
+                Action(FIF.CUT, self.tr("Cut"), shortcut="Ctrl+X"),  # 剪切
+                Action(FIF.PASTE, self.tr("Paste"), shortcut="Ctrl+V"),  # 粘贴
+                Action(FIF.CANCEL, self.tr("Undo"), shortcut="Ctrl+Z"),  # 撤销
+                Action(FIF.ROTATE, self.tr("Redo"), shortcut="Ctrl+Y"),  # 重做
+                Action(FIF.SEARCH, self.tr("Find"), shortcut="Ctrl+F"),  # 查找
+                Action(FIF.CLEAR_SELECTION, self.tr("Clear")),  # 清空
+            ]
+        )
+
+        bar.addSeparator()
+
+        # 第三栏：Zoom 功能
+        bar.addActions(
+            [
+                Action(FIF.ZOOM_IN, self.tr("Zoom in")),  # 放大
+                Action(FIF.ZOOM_OUT, self.tr("Zoom out")),  # 缩小
+            ]
+        )
+
+        bar.addSeparator()
+
+        # 其他功能
+        bar.addActions(
+            [
+                Action(FIF.EDIT, self.tr("Edit"), checkable=True),  # 编辑模式
+                Action(FIF.INFO, self.tr("Info")),  # 信息
+                Action(FIF.DELETE, self.tr("Delete")),  # 删除
             ]
         )
 
         # 绑定 Save 按钮到 self.save_file 方法
-        save_action = bar.actions()[-1]  # Assuming Save is the last added action
+        save_action = bar.actions()[2]  # Save
         save_action.triggered.connect(self.save_file)
 
-        # Share action
-        share_action = bar.actions()[-2]
+        # 绑定 Share 按钮到 self.share_file 方法
+        share_action = bar.actions()[1]  # Share
         share_action.triggered.connect(self.share_file)
 
-        # AI 扩写
-        diary_generate_action = bar.actions()[-3]
+        # 绑定 AI 扩写按钮到 self.diary_generate 方法
+        diary_generate_action = bar.actions()[0]  # AI 扩写
         diary_generate_action.triggered.connect(self.diary_generate)
 
-        bar.addHiddenActions(
-            [
-                Action(FIF.SETTING, self.tr("Settings"), shortcut="Ctrl+I"),
-            ]
-        )
+        # 绑定文本编辑功能到槽函数
+        bar.actions()[3].triggered.connect(self.copy_text)  # Copy
+        bar.actions()[4].triggered.connect(self.cut_text)  # Cut
+        bar.actions()[5].triggered.connect(self.paste_text)  # Paste
+        bar.actions()[6].triggered.connect(self.undo_text)  # Undo
+        bar.actions()[7].triggered.connect(self.redo_text)  # Redo
+        bar.actions()[8].triggered.connect(self.find_text)  # Find
+        bar.actions()[9].triggered.connect(self.clear_text)  # Clear
+
+        # 绑定 Zoom 功能到槽函数
+        bar.actions()[11].triggered.connect(self.zoom_in_text)  # Zoom in
+        bar.actions()[12].triggered.connect(self.zoom_out_text)  # Zoom out
+
         top_layout.addWidget(bar)
 
         # 添加展开按钮到 top_layout 的右侧
@@ -197,8 +231,6 @@ class EditorInterface(QWidget):
         self.chat_window.input_field.setEnabled(False)
         self.chat_window.send_button.setEnabled(False)
         self.chat_window.progress_bar.show()
-        context = self.diary_manager.get_all_diaries_str()
-        self.rag_retriever = RagRetriever(context)
         context = self.rag_retriever.retrieve(message, k=3)
         print("context", context)
         # 在后台线程中处理LLM请求
@@ -344,6 +376,89 @@ class EditorInterface(QWidget):
             print("UI更新完成")
         except Exception as e:
             print("UI更新失败:", str(e))
+
+    # 文本编辑功能
+
+    def copy_text(self):
+        """复制文本"""
+        self.text_edit.copy()
+
+    def cut_text(self):
+        """剪切文本"""
+        self.text_edit.cut()
+
+    def paste_text(self):
+        """粘贴文本"""
+        self.text_edit.paste()
+
+    def undo_text(self):
+        """撤销操作"""
+        self.text_edit.undo()
+
+    def redo_text(self):
+        """重做操作"""
+        self.text_edit.redo()
+
+    def zoom_in_text(self):
+        """放大文本字体"""
+        current_font = self.text_edit.font()
+        current_font.setPointSize(current_font.pointSize() + 2)
+        self.text_edit.setFont(current_font)
+
+    def zoom_out_text(self):
+        """缩小文本字体"""
+        current_font = self.text_edit.font()
+        current_font.setPointSize(max(current_font.pointSize() - 2, 1))  # 最小字体为1
+        self.text_edit.setFont(current_font)
+
+    def find_text(self):
+        """查找文本（右上角弹窗）"""
+        from PySide6.QtWidgets import (
+            QDialog,
+            QVBoxLayout,
+            QLabel,
+            QLineEdit,
+            QPushButton,
+        )
+
+        class FindDialog(QDialog):
+            def __init__(self, parent=None):
+                super().__init__(parent)
+                self.setWindowTitle("Find Text")
+                self.setFixedSize(300, 100)
+                layout = QVBoxLayout()
+
+                self.label = QLabel("Enter text to find:")
+                layout.addWidget(self.label)
+
+                self.input_field = QLineEdit()
+                layout.addWidget(self.input_field)
+
+                self.find_button = QPushButton("Find")
+                layout.addWidget(self.find_button)
+
+                self.setLayout(layout)
+
+        dialog = FindDialog(self)
+        dialog.find_button.clicked.connect(lambda: self.perform_find(dialog))
+        dialog.show()
+
+    def perform_find(self, dialog):
+        """执行查找操作"""
+        find_text = dialog.input_field.text()
+        if find_text:
+            cursor = self.text_edit.textCursor()
+            document = self.text_edit.document()
+            cursor = document.find(find_text, cursor)
+            if cursor.isNull():
+                print("未找到文本")
+            else:
+                self.text_edit.setTextCursor(cursor)
+        dialog.close()
+
+    def clear_text(self):
+        """清空文本"""
+        self.text_edit.clear()
 
 
 if __name__ == "__main__":
