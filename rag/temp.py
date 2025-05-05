@@ -1,14 +1,12 @@
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain.agents import initialize_agent, Tool
-from langchain.tools import tool
 from dotenv import load_dotenv
 import re
 
 load_dotenv(".env/.env")
 
 
-@tool("add")
 def add_numbers(inputs: str) -> str:
     """加法工具：接收两个数字，返回它们的和"""
     try:
@@ -19,7 +17,6 @@ def add_numbers(inputs: str) -> str:
         return f"Error: {str(e)}"
 
 
-@tool("subtract")
 def subtract_numbers(inputs: str) -> str:
     """减法工具：接收两个数字，返回它们的差"""
     try:

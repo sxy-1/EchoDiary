@@ -178,3 +178,17 @@ class DiaryManager(IDiaryStorage):
         except Exception as e:
             print(f"删除日记失败: {e}")
             return False
+
+    def get_all_diaries_str(self) -> List[str]:
+        """
+        获取所有日记条目
+
+        Returns:
+            日记条目对象列表
+        """
+        diaries = []
+        for date_str in self.get_all_dates():
+            diary = self.load_diary(date_str)
+            if diary:
+                diaries.append(str(diary))
+        return diaries

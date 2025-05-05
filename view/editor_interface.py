@@ -19,22 +19,22 @@ from qfluentwidgets import (
     CommandBar,
     Action,
 )
-
 from qfluentwidgets import FluentIcon as FIF
 from managers import DiaryManager
 from models.diary import Diary
 from rag.llm_generator import LLMGenerator
 from common import signalBus
-from view.chat_window import ChatWindow
+from view.chat_window import ChatWindow, LlmThread
 
 from PySide6.QtWidgets import QPushButton
+from rag import RagRetriever
 
 
 class EditorInterface(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.executor = ThreadPoolExecutor(max_workers=1)  # 创建线程池
-
+        self.rag_retriever = None
         self.setObjectName("EditorInterface")
         self.diary_manager = DiaryManager()
         self.llm_generator = LLMGenerator()
@@ -113,13 +113,111 @@ class EditorInterface(QWidget):
         editor_layout.addWidget(self.preview)
 
         # 创建聊天窗口
-        self.chat_window = ChatWindow()
+        self.chat_window = ChatWindow(llm_generator=self.llm_generator)
         self.chat_window.setVisible(False)  # 默认隐藏
         editor_layout.addWidget(self.chat_window)  # 添加到 editor_layout
 
         main_layout.addLayout(top_layout)
         main_layout.addLayout(editor_layout)
         self.setLayout(main_layout)
+        self.chat_window.send_message = self.send_message
+
+    # # 重写 chat_window 的 send_message 方法
+    # def send_message(self):
+    #     """发送消息并获取AI回复"""
+    #     message = self.chat_window.input_field.text().strip()
+    #     if not message:
+    #         return
+    #     # llm tools
+    #     tools = [
+    #         Tool(
+    #             name="GetCurrentDiary",
+    #             func=self.get_current_diary,
+    #             description="获取当前用户编辑框里的日记",
+    #         ),
+    #         # Tool(
+    #         #     name="SetCurrentDiary",
+    #         #     func=self.set_current_diary,
+    #         #     description="设置当前用户编辑框里的日记",
+    #         # ),
+    #         # Tool(name="RetrieveSimilarDiaries", func=retrieve_similar_diaries_tool, description="找回最相关的k个日记"),
+    #         # Tool(name="ExpandDiary", func=expand_diary_tool, description="扩写日记"),
+    #     ]
+    #     llm = self.llm_generator.llm
+    #     common_prompt = PromptTemplate(
+    #         input_variables=["user_query", "tool_result", "chat_history"],
+    #         template=DIARY_COMMON_PROMPT,
+    #     )
+    #     agent = initialize_agent(
+    #         tools=tools,
+    #         llm=llm,
+    #         agent="zero-shot-react-description",
+    #         verbose=True,
+    #         agent_executor_kwargs={"prompt": common_prompt},
+    #         handle_parsing_errors=True,
+    #     )
+    #     print(self.chat_window.chat_manager.get_recent_messages())
+    #     result = agent.invoke(
+    #         {
+    #             "input": message,  # 将 user_query 改为 input
+    #             "tool_result": "",  # 首次为空，后续可传上一步结果
+    #             "chat_history": self.chat_window.chat_manager.get_recent_messages(),
+    #         }
+    #     )
+
+    #     # 显示用户消息
+    #     self.chat_window.add_message(
+    #         "你", "user_avatar.png", message, alignment=Qt.AlignRight
+    #     )
+    #     self.chat_window.input_field.clear()
+
+    #     # 禁用输入区域并显示进度条
+    #     self.chat_window.input_field.setEnabled(False)
+    #     self.chat_window.send_button.setEnabled(False)
+    #     self.chat_window.progress_bar.show()
+
+    #     # # 在后台线程中处理LLM请求
+    #     # self.llm_thread = LlmThread(self.chat_window.chat_manager, result)
+    #     # self.llm_thread.response_ready.connect(self.chat_window.handle_ai_response)
+    #     # self.llm_thread.start()
+    #     self.chat_window.handle_ai_response(result["output"])
+    # 重写 chat_window 的 send_message 方法
+    def send_message(self):
+        message = self.chat_window.input_field.text().strip()
+        if not message:
+            return
+
+        # 显示用户消息
+        self.chat_window.add_message(
+            "你", "user_avatar.png", message, alignment=Qt.AlignRight
+        )
+        self.chat_window.input_field.clear()
+
+        # 禁用输入区域并显示进度条
+        self.chat_window.input_field.setEnabled(False)
+        self.chat_window.send_button.setEnabled(False)
+        self.chat_window.progress_bar.show()
+        context = self.diary_manager.get_all_diaries_str()
+        self.rag_retriever = RagRetriever(context)
+        context = self.rag_retriever.retrieve(message, k=3)
+        print("context", context)
+        # 在后台线程中处理LLM请求
+        self.llm_thread = LlmThread(
+            self.chat_window.chat_manager,
+            input=message,
+            diary_content=self.text_edit.toPlainText(),
+            context=context,
+        )
+        self.llm_thread.response_ready.connect(self.chat_window.handle_ai_response)
+        self.llm_thread.start()
+
+    def get_current_diary(self, tool_input=None):
+        """获取当前用户编辑框里的日记"""
+        return self.text_edit.toPlainText()
+
+    def set_current_diary(self, diary: str):
+        """设置当前用户编辑框里的日记"""
+        self.text_edit.setPlainText(diary)
 
     def toggle_chat_window(self):
         """展开或折叠聊天窗口"""
@@ -166,11 +264,6 @@ class EditorInterface(QWidget):
         self.text_edit.setPlainText(self.diary.content)
 
     def share_file(self):
-        # img = html_to_image(self.html)
-        # save_path, _ = QFileDialog.getSaveFileName(self, "Save Image", "", "PNG Files (*.png);;All Files (*)")
-        # if save_path:
-        #     img.save(save_path)
-        # Create a QWebEngineView to render the HTML
         self.webview = QWebEngineView()
         self.webview.setHtml(self.html)
 

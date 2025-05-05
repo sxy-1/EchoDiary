@@ -13,7 +13,6 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QPixmap
 from PySide6.QtCore import Qt, QThread, Signal
-from rag.llm_generator import LLMGenerator
 from rag.llm_chat_with_history import LlmChatWithHistory
 
 
@@ -22,13 +21,19 @@ class LlmThread(QThread):
 
     response_ready = Signal(str)
 
-    def __init__(self, chat_manager, user_input):
+    def __init__(self, chat_manager, input="", diary_content="", context=""):
+        """初始化线程，设置聊天管理器、输入和上下文"""
+
         super().__init__()
         self.chat_manager = chat_manager
-        self.user_input = user_input
+        self.input = input
+        self.diary_content = diary_content
+        self.context = context
 
     def run(self):
-        response = self.chat_manager.process_input(self.user_input)
+        response = self.chat_manager.process_input(
+            input=self.input, diary_content=self.diary_content, context=self.context
+        )
         self.response_ready.emit(response)
 
 
@@ -90,14 +95,13 @@ class ChatMessageWidget(QWidget):
 
 
 class ChatWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, llm_generator):
         super().__init__()
         self.setWindowTitle("AI聊天界面")
         self.setGeometry(100, 100, 500, 700)
 
         # 初始化LLM相关组件
-        self.llm_generator = LLMGenerator(model_name="gpt-3.5-turbo")
-        self.chat_manager = LlmChatWithHistory(self.llm_generator)
+        self.chat_manager = LlmChatWithHistory(llm_generator)
         self.llm_thread = None
 
         # 主窗口部件

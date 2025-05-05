@@ -20,4 +20,4 @@ class Diary(BaseModel):
 
     def __str__(self) -> str:
         """返回日记的字符串表示"""
-        return f"DiaryEntry({self.date}: {self.content[:30]}{'...' if len(self.content) > 30 else ''})"
+        return f"Date: {self.date}, Content: {self.content}, Weather: {self.weather}, Note: {self.note}, Create Time: {self.create_time}, Update Time: {self.update_time}"

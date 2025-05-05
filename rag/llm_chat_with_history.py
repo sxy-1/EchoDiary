@@ -10,7 +10,7 @@ class LlmChatWithHistory:
     聊天管理类，封装聊天逻辑、历史管理和自动摘要功能。
     """
 
-    def __init__(self, llm_generator, summary_interval=10):
+    def __init__(self, llm_generator: LLMGenerator, summary_interval=10):
         self.llm_generator = llm_generator
         self.chat_history = []  # 无限增长的聊天记录列表
         self.summaries = []  # 存储摘要的列表
@@ -51,7 +51,7 @@ class LlmChatWithHistory:
             # 将摘要存储到 summaries 列表中
             self.summaries.append({"role": "summary", "content": summary_message})
 
-    def process_input(self, user_input, session_id="default"):
+    def process_input(self, input, diary_content="", context=""):
         """
         处理用户输入，返回 AI 响应。
         """
@@ -67,13 +67,16 @@ class LlmChatWithHistory:
 
         # 格式化聊天系统提示（不包含当前用户输入）
         prompt = CHAT_SYSTEM_PROMPT.format(
-            chat_history=prompt_context, input=user_input
+            chat_history=prompt_context,
+            input=input,
+            diary_content=diary_content,
+            context=context,
         )
         # 调用 LLM 生成响应
         response = self.llm_generator.prompt_predict(prompt)
 
         # 添加用户消息和 AI 消息到历史记录
-        self.add_user_message(user_input)
+        self.add_user_message(input)
         self.add_ai_message(response)
 
         return response
@@ -88,12 +91,12 @@ if __name__ == "__main__":
 
     while True:
         # 获取用户输入
-        user_input = input("请输入你的消息 (输入 'exit' 退出): ")
-        if user_input.lower() == "exit":
+        input = input("请输入你的消息 (输入 'exit' 退出): ")
+        if input.lower() == "exit":
             print("聊天结束。")
             break
         # 处理用户输入
-        response = chat_manager.process_input(user_input)
+        response = chat_manager.process_input(input)
         print("AI Response:", response)
 
         # 查看完整历史记录和摘要
