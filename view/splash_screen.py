@@ -36,19 +36,39 @@ class SplashScreen(QDialog):
         self.label = QLabel()
         pixmap = QPixmap(":/images/logo.png")
         self.label.setPixmap(pixmap)
+        self.label.setAlignment(Qt.AlignCenter)
+
+        # 用户名输入框（仅占位，不校验）
+        self.username_input = QLineEdit()
+        self.username_input.setPlaceholderText("请输入用户名...")
+        self.username_input.setFixedHeight(32)
+        self.username_input.setStyleSheet(
+            "padding-left: 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 15px;"
+        )
 
         # 密码输入框
         self.password_input = QLineEdit()
         self.password_input.setPlaceholderText("请输入密码...")
         self.password_input.setEchoMode(QLineEdit.Password)
+        self.password_input.setFixedHeight(32)
+        self.password_input.setStyleSheet(
+            "padding-left: 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 15px;"
+        )
 
         # 确认按钮
         self.confirm_button = QPushButton("确认")
+        self.confirm_button.setFixedHeight(32)
+        self.confirm_button.setStyleSheet(
+            "background-color: #4CAF50; color: white; border-radius: 6px; font-size: 15px;"
+        )
         self.confirm_button.clicked.connect(self.check_password)
 
         # 布局
         layout = QVBoxLayout()
+        layout.setContentsMargins(40, 40, 40, 40)
+        layout.setSpacing(20)
         layout.addWidget(self.label, alignment=Qt.AlignCenter)
+        layout.addWidget(self.username_input)
 
         password_layout = QHBoxLayout()
         password_layout.addWidget(self.password_input)
@@ -79,4 +99,5 @@ class SplashScreen(QDialog):
             self.main_window_shown = True  # 标记主界面已显示
             self.show_main_window()
         else:
-            event.accept()  # 允许关闭窗口，但不显示主界面
+            if event:
+                event.accept()  # 允许关闭窗口，但不显示主界面

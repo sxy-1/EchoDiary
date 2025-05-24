@@ -2,9 +2,7 @@
 from qfluentwidgets import (
     SettingCardGroup,
     SwitchSettingCard,
-    FolderListSettingCard,
     OptionsSettingCard,
-    PushSettingCard,
     HyperlinkCard,
     PrimaryPushSettingCard,
     ScrollArea,
@@ -18,10 +16,9 @@ from qfluentwidgets import (
 from qfluentwidgets import FluentIcon as FIF
 from qfluentwidgets import InfoBar, SearchLineEdit
 from PySide6.QtWidgets import QCompleter
-from PySide6.QtCore import Qt, QUrl, QStandardPaths
+from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QWidget, QLabel, QFileDialog, QLineEdit
-
 
 from common.config import cfg, HELP_URL, FEEDBACK_URL, AUTHOR, VERSION, YEAR, isWin11
 from common.signal_bus import signalBus
@@ -35,18 +32,18 @@ from managers.config_manager import ConfigManager
 
 
 class SettingInterface(ScrollArea):
-    """Setting interface"""
+    """设置界面"""
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.scrollWidget = QWidget()
         self.expandLayout = ExpandLayout(self.scrollWidget)
 
-        # setting label
-        self.settingLabel = QLabel(self.tr("Settings"), self)
+        # 设置标签
+        self.settingLabel = QLabel("设置", self)
         # 添加配置管理器
         self.configManager = ConfigManager()
-        self.configGroup = SettingCardGroup(self.tr("Configuration"), self.scrollWidget)
+        self.configGroup = SettingCardGroup("基础配置", self.scrollWidget)
         self.__initConfigSettings()
         self.expandLayout.addWidget(self.configGroup)
 
@@ -54,7 +51,7 @@ class SettingInterface(ScrollArea):
 
         # line edit with completer
         self.weatherCard = SearchLineEdit(self)
-        self.weatherCard.setPlaceholderText("Type a stand name")
+        self.weatherCard.setPlaceholderText("输入城市名")
         self.weatherCard.setClearButtonEnabled(True)
         self.weatherCard.setFixedWidth(230)
         stands = [
@@ -101,132 +98,101 @@ class SettingInterface(ScrollArea):
         self.weatherCard.setCompleter(completer)
 
         # 创建天气设置组
-        self.weatherGroup = SettingCardGroup("Weather Settings", self.scrollWidget)
+        self.weatherGroup = SettingCardGroup("天气设置", self.scrollWidget)
 
         self.weatherGroup.addSettingCard(self.weatherCard)
         # endregion
 
-        # music folders
-        self.musicInThisPCGroup = SettingCardGroup(
-            self.tr("Music on this PC"), self.scrollWidget
-        )
-        self.musicFolderCard = FolderListSettingCard(
-            cfg.musicFolders,
-            self.tr("Local music library"),
-            directory=QStandardPaths.writableLocation(
-                QStandardPaths.StandardLocation.MusicLocation
-            ),
-            parent=self.musicInThisPCGroup,
-        )
-        self.downloadFolderCard = PushSettingCard(
-            self.tr("Choose folder"),
-            FIF.DOWNLOAD,
-            self.tr("Download directory"),
-            cfg.get(cfg.downloadFolder),
-            self.musicInThisPCGroup,
-        )
-
-        # personalization
-        self.personalGroup = SettingCardGroup(
-            self.tr("Personalization"), self.scrollWidget
-        )
+        # 个性化
+        self.personalGroup = SettingCardGroup("个性化", self.scrollWidget)
         self.micaCard = SwitchSettingCard(
             FIF.TRANSPARENT,
-            self.tr("Mica effect"),
-            self.tr("Apply semi transparent to windows and surfaces"),
+            "Mica特效",
+            "为窗口和表面应用半透明效果",
             cfg.micaEnabled,
             self.personalGroup,
         )
         self.themeCard = OptionsSettingCard(
             cfg.themeMode,
             FIF.BRUSH,
-            self.tr("Application theme"),
-            self.tr("Change the appearance of your application"),
-            texts=[self.tr("Light"), self.tr("Dark"), self.tr("Use system setting")],
+            "应用主题",
+            "更改应用程序的外观",
+            texts=["浅色", "深色", "跟随系统设置"],
             parent=self.personalGroup,
         )
         self.themeColorCard = CustomColorSettingCard(
             cfg.themeColor,
             FIF.PALETTE,
-            self.tr("Theme color"),
-            self.tr("Change the theme color of you application"),
+            "主题色",
+            "更改应用程序的主题色",
             self.personalGroup,
         )
         self.zoomCard = OptionsSettingCard(
             cfg.dpiScale,
             FIF.ZOOM,
-            self.tr("Interface zoom"),
-            self.tr("Change the size of widgets and fonts"),
+            "界面缩放",
+            "更改控件和字体的大小",
             texts=[
                 "100%",
                 "125%",
                 "150%",
                 "175%",
                 "200%",
-                self.tr("Use system setting"),
+                "跟随系统设置",
             ],
             parent=self.personalGroup,
         )
         self.languageCard = ComboBoxSettingCard(
             cfg.language,
             FIF.LANGUAGE,
-            self.tr("Language"),
-            self.tr("Set your preferred language for UI"),
-            texts=["简体中文", "繁體中文", "English", self.tr("Use system setting")],
+            "语言",
+            "设置界面显示语言",
+            texts=["简体中文", "繁體中文", "English", "跟随系统设置"],
             parent=self.personalGroup,
         )
 
-        # material
-        self.materialGroup = SettingCardGroup(self.tr("Material"), self.scrollWidget)
+        # 材质
+        self.materialGroup = SettingCardGroup("材质", self.scrollWidget)
         self.blurRadiusCard = RangeSettingCard(
             cfg.blurRadius,
             FIF.ALBUM,
-            self.tr("Acrylic blur radius"),
-            self.tr("The greater the radius, the more blurred the image"),
+            "亚克力模糊半径",
+            "半径越大，图像越模糊",
             self.materialGroup,
         )
 
-        # update software53
-        self.updateSoftwareGroup = SettingCardGroup(
-            self.tr("Software update"), self.scrollWidget
-        )
+        # 软件更新
+        self.updateSoftwareGroup = SettingCardGroup("软件更新", self.scrollWidget)
         self.updateOnStartUpCard = SwitchSettingCard(
             FIF.UPDATE,
-            self.tr("Check for updates when the application starts"),
-            self.tr("The new version will be more stable and have more features"),
+            "启动时检查更新",
+            "新版本将更加稳定并拥有更多功能",
             configItem=cfg.checkUpdateAtStartUp,
             parent=self.updateSoftwareGroup,
         )
 
-        # application
-        self.aboutGroup = SettingCardGroup(self.tr("About"), self.scrollWidget)
+        # 关于
+        self.aboutGroup = SettingCardGroup("关于", self.scrollWidget)
         self.helpCard = HyperlinkCard(
             HELP_URL,
-            self.tr("Open help page"),
+            "打开帮助页面",
             FIF.HELP,
-            self.tr("Help"),
-            self.tr(
-                "Discover new features and learn useful tips about PyQt-Fluent-Widgets"
-            ),
+            "帮助",
+            "发现新功能并学习Echo Diary的使用技巧",
             self.aboutGroup,
         )
         self.feedbackCard = PrimaryPushSettingCard(
-            self.tr("Provide feedback"),
+            "提供反馈",
             FIF.FEEDBACK,
-            self.tr("Provide feedback"),
-            self.tr("Help us improve PyQt-Fluent-Widgets by providing feedback"),
+            "提供反馈",
+            "通过反馈帮助我们改进Echo Diary",
             self.aboutGroup,
         )
         self.aboutCard = PrimaryPushSettingCard(
-            self.tr("Check update"),
+            "检查更新",
             FIF.INFO,
-            self.tr("About"),
-            "© "
-            + self.tr("Copyright")
-            + f" {YEAR}, {AUTHOR}. "
-            + self.tr("Version")
-            + " "
-            + VERSION,
+            "关于",
+            "© " + "版权" + f" {YEAR}, {AUTHOR}. " + "版本" + " " + VERSION,
             self.aboutGroup,
         )
 
@@ -240,14 +206,14 @@ class SettingInterface(ScrollArea):
         self.setWidgetResizable(True)
         self.setObjectName("settingInterface")
 
-        # initialize style sheet
+        # 初始化样式表
         self.scrollWidget.setObjectName("scrollWidget")
         self.settingLabel.setObjectName("settingLabel")
         StyleSheet.SETTING_INTERFACE.apply(self)
 
         self.micaCard.setEnabled(isWin11())
 
-        # initialize layout
+        # 初始化布局
         self.__initLayout()
         self.__connectSignalToSlot()
 
@@ -256,9 +222,9 @@ class SettingInterface(ScrollArea):
 
         # 环境路径
         self.envPathCard = PrimaryPushSettingCard(
-            self.tr("环境路径"),
+            "环境路径",
             FIF.FOLDER,
-            self.tr("设置环境路径"),
+            "设置环境路径",
             self.configManager.get_config_value("env_path", "./"),
             self.configGroup,
         )
@@ -268,9 +234,9 @@ class SettingInterface(ScrollArea):
 
         # 日记路径
         self.diaryPathCard = PrimaryPushSettingCard(
-            self.tr("日记路径"),
+            "日记路径",
             FIF.FOLDER,
-            self.tr("设置日记路径"),
+            "设置日记路径",
             self.configManager.get_config_value("diary_path", "./data/diary/"),
             self.configGroup,
         )
@@ -280,9 +246,9 @@ class SettingInterface(ScrollArea):
 
         # 密钥路径
         self.keyPathCard = PrimaryPushSettingCard(
-            self.tr("密钥路径"),
+            "密钥路径",
             FIF.FOLDER,
-            self.tr("设置密钥路径"),
+            "设置密钥路径",
             self.configManager.get_config_value("key_path", "./data/keys/"),
             self.configGroup,
         )
@@ -292,12 +258,10 @@ class SettingInterface(ScrollArea):
 
         # 密码
         self.passwordCard = PrimaryPushSettingCard(
-            self.tr("密码"),
+            "密码",
             FIF.FOLDER,
-            self.tr("设置密码"),
-            "******"
-            if self.configManager.get_config_value("password")
-            else self.tr("未设置"),
+            "设置密码",
+            "******" if self.configManager.get_config_value("password") else "未设置",
             self.configGroup,
         )
         self.passwordCard.clicked.connect(self.__onPasswordCardClicked)
@@ -310,13 +274,13 @@ class SettingInterface(ScrollArea):
 
     def __onPathCardClicked(self, config_key, card):
         """处理路径选择"""
-        folder = QFileDialog.getExistingDirectory(self, self.tr("选择目录"), "./")
+        folder = QFileDialog.getExistingDirectory(self, "选择目录", "./")
         if folder:
             self.configManager.set_config_value(config_key, folder)
             card.setContent(folder)
             InfoBar.success(
-                self.tr("配置已更新"),
-                self.tr(f"{config_key} 已更新"),
+                "配置已更新",
+                f"{config_key} 已更新",
                 duration=1500,
                 parent=self,
             )
@@ -325,16 +289,16 @@ class SettingInterface(ScrollArea):
         """处理密码设置"""
         password, ok = QInputDialog.getText(
             self,
-            self.tr("设置密码"),
-            self.tr("输入新密码:"),
+            "设置密码",
+            "输入新密码:",
             QLineEdit.Password,
         )
         if ok and password:
             self.configManager.set_config_value("password", password)
             self.passwordCard.setContent("******")
             InfoBar.success(
-                self.tr("密码已更新"),
-                self.tr("密码已成功更新"),
+                "密码已更新",
+                "密码已成功更新",
                 duration=1500,
                 parent=self,
             )
@@ -342,12 +306,9 @@ class SettingInterface(ScrollArea):
     def __initLayout(self):
         self.settingLabel.move(36, 30)
 
-        # add cards to group
-        self.musicInThisPCGroup.addSettingCard(self.musicFolderCard)
-        self.musicInThisPCGroup.addSettingCard(self.downloadFolderCard)
-
-        self.personalGroup.addSettingCard(self.micaCard)
+        # 添加卡片到组
         self.personalGroup.addSettingCard(self.themeCard)
+        self.personalGroup.addSettingCard(self.micaCard)
         self.personalGroup.addSettingCard(self.themeColorCard)
         self.personalGroup.addSettingCard(self.zoomCard)
         self.personalGroup.addSettingCard(self.languageCard)
@@ -360,10 +321,10 @@ class SettingInterface(ScrollArea):
         self.aboutGroup.addSettingCard(self.feedbackCard)
         self.aboutGroup.addSettingCard(self.aboutCard)
 
-        # add setting card group to layout
+        # 添加设置卡片组到布局
         self.expandLayout.setSpacing(28)
         self.expandLayout.setContentsMargins(36, 10, 36, 0)
-        self.expandLayout.addWidget(self.musicInThisPCGroup)
+
         self.expandLayout.addWidget(self.weatherGroup)
         self.expandLayout.addWidget(self.personalGroup)
         self.expandLayout.addWidget(self.materialGroup)
@@ -371,17 +332,17 @@ class SettingInterface(ScrollArea):
         self.expandLayout.addWidget(self.aboutGroup)
 
     def __showRestartTooltip(self):
-        """show restart tooltip"""
+        """显示重启提示"""
         InfoBar.success(
-            self.tr("Updated successfully"),
-            self.tr("Configuration takes effect after restart"),
+            "更新成功",
+            "配置将在重启后生效",
             duration=1500,
             parent=self,
         )
 
     def __onDownloadFolderCardClicked(self):
-        """download folder card clicked slot"""
-        folder = QFileDialog.getExistingDirectory(self, self.tr("Choose folder"), "./")
+        """下载文件夹卡片点击槽"""
+        folder = QFileDialog.getExistingDirectory(self, "选择文件夹", "./")
         if not folder or cfg.get(cfg.downloadFolder) == folder:
             return
 
@@ -389,18 +350,15 @@ class SettingInterface(ScrollArea):
         self.downloadFolderCard.setContent(folder)
 
     def __connectSignalToSlot(self):
-        """connect signal to slot"""
+        """连接信号与槽"""
         cfg.appRestartSig.connect(self.__showRestartTooltip)
 
-        # music in the pc
-        self.downloadFolderCard.clicked.connect(self.__onDownloadFolderCardClicked)
-
-        # personalization
+        # 个性化
         self.themeCard.optionChanged.connect(lambda ci: setTheme(cfg.get(ci)))
         self.themeColorCard.colorChanged.connect(setThemeColor)
         self.micaCard.checkedChanged.connect(signalBus.micaEnableChanged)
 
-        # about
+        # 关于
         self.feedbackCard.clicked.connect(
             lambda: QDesktopServices.openUrl(QUrl(FEEDBACK_URL))
         )

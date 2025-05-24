@@ -81,15 +81,13 @@ class Config(QConfig):
     )
 
 
-YEAR = 2023
-AUTHOR = "zhiyiYo"
+YEAR = 2025
+AUTHOR = "dullspear"
 VERSION = __version__
-HELP_URL = "https://qfluentwidgets.com"
-REPO_URL = "https://github.com/zhiyiYo/PyQt-Fluent-Widgets"
-EXAMPLE_URL = "https://github.com/zhiyiYo/PyQt-Fluent-Widgets/tree/PyQt6/examples"
-FEEDBACK_URL = "https://github.com/zhiyiYo/PyQt-Fluent-Widgets/issues"
-RELEASE_URL = "https://github.com/zhiyiYo/PyQt-Fluent-Widgets/releases/latest"
-SUPPORT_URL = "https://afdian.net/a/zhiyiYo"
+HELP_URL = "https://github.com/sxy-1/EchoDiary"
+REPO_URL = "https://github.com/sxy-1/EchoDiary"
+FEEDBACK_URL = "https://github.com/sxy-1/EchoDiary/issues"
+RELEASE_URL = "https://github.com/sxy-1/EchoDiary/releases/latest"
 
 
 cfg = Config()

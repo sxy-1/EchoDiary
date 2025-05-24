@@ -22,17 +22,22 @@ class TestCryptoManager:
         os.makedirs(self.test_dir, exist_ok=True)
 
         # Mock _get_key_paths 方法以使用测试路径
-        with patch("utils.config.get_config_value", return_value=self.test_dir), \
-             patch.object(CryptoManager, "_get_key_paths", return_value=(
-                 os.path.join(self.test_dir, "public_key.pem"),
-                 os.path.join(self.test_dir, "private_key.pem")
-             )):
-            self.crypto_manager = CryptoManager()
+        patcher = patch.object(
+            CryptoManager,
+            "_get_key_paths",
+            return_value=(
+                os.path.join(self.test_dir, "public_key.pem"),
+                os.path.join(self.test_dir, "private_key.pem"),
+            ),
+        )
+        self._patcher = patcher
+        patcher.start()
+        self.crypto_manager = CryptoManager()
 
-            # 如果密钥不存在，则生成密钥
-            public_key_path, private_key_path = self.crypto_manager._get_key_paths()
-            if not (os.path.exists(public_key_path) and os.path.exists(private_key_path)):
-                self.crypto_manager.generate_rsa_keys()
+        # 如果密钥不存在，则生成密钥
+        public_key_path, private_key_path = self.crypto_manager._get_key_paths()
+        if not (os.path.exists(public_key_path) and os.path.exists(private_key_path)):
+            self.crypto_manager.generate_rsa_keys()
 
     def test_generate_rsa_keys(self):
         """
@@ -73,7 +78,7 @@ class TestCryptoManager:
             "time": "12:00:00",
             "note": "这是一个示例备注",
             "weather": "晴天",
-            "content": "这是日记内容"
+            "content": "这是日记内容",
         }
         serialized_data = pickle.dumps(data)
         ciphertext = self.crypto_manager.encrypt_data(serialized_data)

@@ -18,7 +18,7 @@ from qfluentwidgets import FluentIcon as FIF
 from view.calendar_interface import CalendarInterface
 from view.editor_interface import EditorInterface
 from view.editor_interface_3 import EditorInterface3
-from view.setting_interface import SettingInterface  # 导入 SettingInterface
+from view.setting_interface import SettingInterface
 from dotenv import load_dotenv
 
 
@@ -68,7 +68,7 @@ class Main_Window(FluentWindow):
 
         self.navigationInterface.addWidget(
             routeKey="avatar",
-            widget=NavigationAvatarWidget("zhiyiYo", "resource/images/shoko.png"),
+            widget=NavigationAvatarWidget("殳小衍", "resource/images/shoko.png"),
             onClick=self.showMessageBox,
             position=NavigationItemPosition.BOTTOM,
         )
@@ -78,7 +78,7 @@ class Main_Window(FluentWindow):
     def initWindow(self):
         self.resize(900, 700)
         self.setWindowIcon(QIcon(":/qfluentwidgets/images/logo.png"))
-        self.setWindowTitle("PyQt-Fluent-Widgets")
+        self.setWindowTitle("Echo-Diary")
 
         desktop = QApplication.screens()[0].availableGeometry()
         w, h = desktop.width(), desktop.height()
@@ -86,7 +86,7 @@ class Main_Window(FluentWindow):
 
     def showMessageBox(self):
         w = MessageBox(
-            "支持作者🥰",
+            "愿你拥有美好的一天🥰",
             "个人开发不易，如果这个项目帮助到了您，可以考虑请作者喝一瓶快乐水🥤。您的支持就是作者开发和维护项目的动力🚀",
             self,
         )
@@ -94,7 +94,7 @@ class Main_Window(FluentWindow):
         w.cancelButton.setText("下次一定")
 
         if w.exec():
-            QDesktopServices.openUrl(QUrl("https://afdian.net/a/zhiyiYo"))
+            QDesktopServices.openUrl(QUrl("https://github.com/sxy-1/EchoDiary"))
 
 
 if __name__ == "__main__":

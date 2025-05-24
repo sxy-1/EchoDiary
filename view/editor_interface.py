@@ -36,7 +36,7 @@ class EditorInterface(QWidget):
         self.executor = ThreadPoolExecutor(max_workers=1)  # 创建线程池
         self.setObjectName("EditorInterface")
         self.diary_manager = DiaryManager()
-        self.llm_generator = LLMGenerator()
+        self.llm_generator = LLMGenerator(model_name="gpt-4-turbo-preview")
         self.html = None
         self.rag_retriever = RagRetriever(self.diary_manager.get_all_diaries_str())
 
