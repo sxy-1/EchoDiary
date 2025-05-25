@@ -1,7 +1,8 @@
 # coding:utf-8
+
 import sys
 from enum import Enum
-
+from managers import WeatherManager
 from PySide6.QtCore import QLocale
 from qfluentwidgets import (
     qconfig,
@@ -78,6 +79,10 @@ class Config(QConfig):
     # software update
     checkUpdateAtStartUp = ConfigItem(
         "Update", "CheckUpdateAtStartUp", True, BoolValidator()
+    )
+
+    weatherCity = ConfigItem(
+        "Weather", "City", "上海", OptionsValidator(WeatherManager().get_all_cities())
     )
 
 
