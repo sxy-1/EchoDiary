@@ -1,14 +1,13 @@
 import json
 import os
 
+from pydantic import BaseModel
+from models import Config
+
 
 class ConfigManager:
     CONFIG_FILE = "./data/config/config.json"
-    DEFAULT_CONFIG = {
-        "key_path": "./data/keys/",
-        "password": "",  # 默认无密码
-        "diary_path": "./data/diary/",
-    }
+    DEFAULT_CONFIG = Config()  # 修改为BaseModel实例
 
     def __init__(self, file_path=None):
         """初始化配置管理器实例，加载配置文件。"""
@@ -21,14 +20,19 @@ class ConfigManager:
         file_path = file_path or cls.CONFIG_FILE
         if not os.path.exists(file_path):
             cls._save_config(cls.DEFAULT_CONFIG, file_path)
-            return cls.DEFAULT_CONFIG
+            return cls.DEFAULT_CONFIG.model_dump()
         with open(file_path, "r") as f:
-            return json.load(f)
+            data = json.load(f)
+            # 用BaseModel校验和补全
+            return Config(**data).model_dump()
 
     @classmethod
     def _save_config(cls, config, file_path=None):
         """保存配置到文件。"""
         file_path = file_path or cls.CONFIG_FILE
+        # 支持传入BaseModel或dict
+        if isinstance(config, BaseModel):
+            config = config.model_dump()
         with open(file_path, "w") as f:
             json.dump(config, f, indent=4)
 
@@ -65,12 +69,12 @@ class ConfigManager:
             print("配置文件已存在，正在检查缺失项...")
             config = cls._load_config(file_path)
             updated = False
-            for key, default_value in cls.DEFAULT_CONFIG.items():
-                if key not in config:
-                    config[key] = default_value
-                    updated = True
+            # 用BaseModel补全缺失项
+            new_config = Config(**config).model_dump()
+            if new_config != config:
+                updated = True
             if updated:
-                cls._save_config(config, file_path)
+                cls._save_config(new_config, file_path)
                 print("配置文件已更新，缺失的配置项已补充。")
             else:
                 print("配置文件完整，无需更新。")

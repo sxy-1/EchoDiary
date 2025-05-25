@@ -21,7 +21,7 @@ from qfluentwidgets import (
 )
 from qfluentwidgets import FluentIcon as FIF
 from managers import DiaryManager
-from models.diary import Diary
+from models import Diary
 from rag.llm_generator import LLMGenerator
 from common import signalBus
 from view.chat_window import ChatWindow, LlmThread

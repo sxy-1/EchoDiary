@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 
 from managers.crypto_manager import CryptoManager
 from managers.config_manager import ConfigManager
-from models.diary import Diary
+from models import Diary
 
 
 class IDiaryStorage(ABC):
